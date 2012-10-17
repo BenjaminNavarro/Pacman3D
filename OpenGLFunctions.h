@@ -14,13 +14,14 @@
 
 // Personnal libraries
 #include "privateFunctions.h"
+#include "values.h"
 
 /***				Prototypes					***/
 void drawScene();
 void handleKeypress(unsigned char key, int x, int y);
 void initRendering();
 void handleResize(int w, int h);
-void update(int value);
+void PAC_Update(int value);
 
 
 #endif

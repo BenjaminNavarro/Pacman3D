@@ -17,3 +17,23 @@ GLuint loadTexture(Image* image) {
 				 image->pixels);               //The actual pixel data
 	return textureId; //Returns the id of the texture
 }
+
+// Call glColor3f using RGB values (0-255)
+void glColorRGB(unsigned char r, unsigned char g, unsigned char b) {
+	GLfloat red, green, blue;
+	red 	= (float) r / 255.0;
+	green 	= (float) g / 255.0;
+	blue 		= (float) b / 255.0;
+
+	glColor3f(red, green, blue);
+}
+
+// Call glColor4f using RGB values (0-255) and alpha (0-1)
+void glColorRGBAlpha(unsigned char r, unsigned char g, unsigned char b, float alpha) {
+	GLfloat red, green, blue;
+	red 	= (float) r / 255.0;
+	green 	= (float) g / 255.0;
+	blue 		= (float) b / 255.0;
+
+	glColor4f(red, green, blue, alpha);
+}

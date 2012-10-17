@@ -18,8 +18,8 @@
 #include <gl.h>
 
 // Personnal libraries
-#include "privateFunctions.h"
 #include "OpenGLFunctions.h"
+#include "values.h"
 
 
 int main(int argc, char** argv) {
@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 	glutKeyboardFunc(handleKeypress);
 	glutReshapeFunc(handleResize);
 	
-	glutTimerFunc(25, update, 0); //Add a timer
+	glutTimerFunc(speed, PAC_Update, 0); //Add a timer
 	
 	glutMainLoop();
 	return 0;
