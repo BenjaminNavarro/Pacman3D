@@ -1,9 +1,23 @@
 #include "OpenGLFunctions.h"
 
 /***				Global variables			***/
-float _angle = -70.0f;
-float _greenPos = -6.0f;
-GLuint _textureId; //The id of the texture
+GLMmodel*  	model;			        /* glm model data structure */
+GLfloat    	scale;			        /* original scale factor */
+
+float 		camAngle = 45.0f;
+
+void loadModels(void) {
+
+    /* read in the model */
+    model = glmReadOBJ("models/pacman.obj");
+    scale = glmUnitize(model);
+    glmFacetNormals(model);
+    glmVertexNormals(model, 90.0f);
+
+    glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_CULL_FACE);
+}
 
 //Draws the 3D scene
 void drawScene() {
@@ -11,10 +25,10 @@ void drawScene() {
 	
 	glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-	
+
 	glTranslatef(0.0f, 0.0f, -5.5f);
-	glRotatef(60,0,0,0);
-	
+	glRotatef(camAngle,1,0,0);
+
 	glPushMatrix();
 		glColorRGB(0xAA, 0xAA, 0xAA);
 	glPopMatrix();
@@ -31,15 +45,15 @@ void drawScene() {
 
 	glEnd();
 
-	glPushMatrix();									// Push the current matrix stack
-		glColorRGBAlpha(0xF8, 0xFC, 0x37, 0.6);
-		glTranslatef(PAC_Position.x, PAC_RADIUS, PAC_Position.z);						// Multiply the current matrix by a translation matrix
-		glRotatef(1,1,1,0);					 	  	// Multiply the current matrix by a rotation matrix
-		glRotatef(90,0,1,0);						// Multiply the current matrix by a rotation matrix
-		glutSolidSphere(PAC_RADIUS , 32 , 32 );
+    glPushMatrix();
+
+		glTranslatef(PAC_Position.x, PAC_RADIUS + PAC_Position.y, PAC_Position.z);
+    	glScalef(PAC_RADIUS,PAC_RADIUS,PAC_RADIUS);
+
+    	glmDraw(model, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+
 	glPopMatrix();
 
-	
 	glutSwapBuffers();
 }
 
@@ -61,6 +75,24 @@ void handleKeypress(unsigned char key, int x, int y) {
 		case 'd':	// Move right
 			PAC_Direction = RIGHT;
 			break;
+		case 'h':	// Move high
+			PAC_Position.y = 1;
+			break;
+		case 'l':	// Move low
+			PAC_Position.y = -1;
+			break;
+	}
+}
+
+//Called when a key is released
+void handleKeyup(unsigned char key, int x, int y) {
+	switch (key) {
+		case 'h':	// Move high
+			PAC_Position.y = 0;
+			break;
+		case 'l':	// Move low
+			PAC_Position.y = 0;
+			break;
 	}
 }
 
@@ -69,6 +101,13 @@ void initRendering() {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND); //Enable alpha blending
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Set the blend function
+	glEnable(GL_TEXTURE_2D);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+
+	loadModels();
 }
 
 //Called when the window is resized
@@ -106,7 +145,6 @@ void PAC_Update(int value) {
 		}
 		break;
 	}
-
 	
 	glutPostRedisplay();
 	glutTimerFunc(speed, PAC_Update, 0);

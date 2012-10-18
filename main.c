@@ -35,6 +35,7 @@ int main(int argc, char** argv) {
 	//Set handler functions
 	glutDisplayFunc(drawScene);
 	glutKeyboardFunc(handleKeypress);
+	glutKeyboardUpFunc(handleKeyup);
 	glutReshapeFunc(handleResize);
 	
 	glutTimerFunc(speed, PAC_Update, 0); //Add a timer
