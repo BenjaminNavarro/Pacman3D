@@ -10,6 +10,9 @@
 
 // OpenGL / GLUT libraries
 #ifdef __APPLE__
+	#include <OpenGL.h>.h>
+	#include <gl.h>
+	#include <glu.h>
 	#include <glut.h>
 #else
 	#include <GL/glut.h>
