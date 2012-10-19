@@ -2,7 +2,7 @@
  *	Pacman3D
  *
  *	Benjamin Navarro
- *	M1 EEA- UniversitŽ Montpellier 2
+ *	M1 EEA- Universitï¿½ Montpellier 2
  *	2012 - 2013
  *
 */
@@ -12,16 +12,7 @@
 #include <stdlib.h>
 
 // OpenGL / GLUT libraries
-#ifdef __APPLE__
-	#include <OpenGL.h>
-	#include <glut.h>
-	#include <glu.h>
-	#include <gl.h>
-#else
-	#include <GL/gl.h>
-	#include <GL/glu.h>
-	#include <GL/glut.h>
-#endif
+#include "OpenGLHeader.h"
 
 
 // Personnal libraries
