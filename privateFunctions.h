@@ -6,10 +6,16 @@
 #include <stdlib.h>
 
 // OpenGL / GLUT libraries
-#include <OpenGL.h>
-#include <glut.h>
-#include <glu.h>
-#include <gl.h>
+#ifdef __APPLE__
+	#include <OpenGL.h>
+	#include <glut.h>
+	#include <glu.h>
+	#include <gl.h>
+#else
+	#include <GL/gl.h>
+	#include <GL/glu.h>
+	#include <GL/glut.h>
+#endif
 
 #include "imageloader.h"
 

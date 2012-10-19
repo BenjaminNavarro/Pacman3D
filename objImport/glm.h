@@ -12,8 +12,17 @@
  */
 
 
-#include <glut.h>
-#include <gl.h>
+// OpenGL / GLUT libraries
+#ifdef __APPLE__
+	#include <OpenGL.h>
+	#include <glut.h>
+	#include <glu.h>
+	#include <gl.h>
+#else
+	#include <GL/gl.h>
+	#include <GL/glu.h>
+	#include <GL/glut.h>
+#endif
 
 
 #ifndef M_PI

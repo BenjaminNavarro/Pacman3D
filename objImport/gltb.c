@@ -8,9 +8,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <assert.h>
-#include "glut.h"
 #include "gltb.h"
-#include "gl.h"
 
 #define GLTB_TIME_EPSILON  10
 
