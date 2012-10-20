@@ -111,6 +111,7 @@ Image* loadBMP(const char* filename) {
 			break;
 		default:
 			assert(!"Unknown bitmap format");
+			break;
 	}
 	
 	//Read the data

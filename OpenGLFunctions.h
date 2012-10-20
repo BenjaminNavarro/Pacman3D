@@ -20,6 +20,7 @@
 
 /***				Prototypes					***/
 void drawScene();
+void loadModels();
 void handleKeypress(unsigned char key, int x, int y);
 void handleKeyup(unsigned char key, int x, int y);
 void initRendering();

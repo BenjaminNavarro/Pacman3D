@@ -1,23 +1,10 @@
 #include "OpenGLFunctions.h"
 
 /***				Global variables			***/
-GLMmodel*  	model;			        /* glm model data structure */
-GLfloat    	scale;			        /* original scale factor */
-
-float 		camAngle = 90.0f;
-
-void loadModels(void) {
-
-    /* read in the model */
-    model = glmReadOBJ("models/pacman.obj");
-    scale = glmUnitize(model);
-    glmFacetNormals(model);
-    glmVertexNormals(model, 90.0f);
-
-    glEnable(GL_DEPTH_TEST);
-
-    glEnable(GL_CULL_FACE);
-}
+GLMmodel*  	model;			        // glm model data structure
+GLfloat    	scale;			        // original scale factor
+GLuint		floorTex;				// handle for the floor texture
+float 		camAngle = 45.0f;
 
 //Draws the 3D scene
 void drawScene() {
@@ -28,26 +15,26 @@ void drawScene() {
 
 	// translate the camera to follow pacman
 	// Projection of pacman's z coordinate on the y and z axes depending on the camera angle
-	glTranslatef(-PAC_Position.x, PAC_Position.z*sin(degToRad(camAngle)), -4.0f - PAC_Position.z*cos(degToRad(camAngle)));
+	glTranslatef(-PAC_Position.x, PAC_Position.z*sin(degToRad(camAngle)), -3.0f - PAC_Position.z*cos(degToRad(camAngle)));
 	glRotatef(camAngle,1,0,0);
 
-	printf("camAngle : %g\n",camAngle);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, floorTex);
 
-	glPushMatrix();
-		glColorRGB(0xAA, 0xAA, 0xAA);
-	glPopMatrix();
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	// Draw the bottom base square
 	glBegin(GL_QUADS);
 
-		point base={GAME_BASE_SIZE,0,GAME_BASE_SIZE};
-
-		glVertex3f(-base.x, 	base.y, 	base.z);
-		glVertex3f(	base.x, 	base.y, 	base.z);
-		glVertex3f(	base.x, 	base.y,    -base.z);
-		glVertex3f(-base.x, 	base.y,    -base.z);
+		glTexCoord2f(0,0); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
+		glTexCoord2f(1,0); glVertex3f(	GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
+		glTexCoord2f(1,1); glVertex3f(	GameBaseSize.x, 	GameBaseSize.y,    -GameBaseSize.z);
+		glTexCoord2f(0,1); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y,    -GameBaseSize.z);
 
 	glEnd();
+
+	glDisable(GL_TEXTURE_2D);
 
     glPushMatrix();
 
@@ -83,10 +70,25 @@ void drawScene() {
 	glutSwapBuffers();
 }
 
+// Loads the differents models used
+void loadModels(void) {
+
+    /* read in the model */
+    model = glmReadOBJ("models/pacman.obj");
+    scale = glmUnitize(model);
+    glmFacetNormals(model);
+    glmVertexNormals(model, 90.0f);
+
+    glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_CULL_FACE);
+}
+
 //Called when a key is pressed
 void handleKeypress(unsigned char key, int x, int y) {
 	switch (key) {
 		case 27: //Escape key
+			glDeleteTextures(1,&floorTex);
 			exit(0);
 			break;
 		case 'z':	// Move forward
@@ -102,10 +104,7 @@ void handleKeypress(unsigned char key, int x, int y) {
 			PAC_Direction = RIGHT;
 			break;
 		case 'h':	// Move high
-			PAC_Position.y = 1;
-			break;
-		case 'l':	// Move low
-			PAC_Position.y = -1;
+			PAC_Position.y = PAC_RADIUS*2;
 			break;
 		case 'p':	// Move low
 			camAngle += 1;
@@ -122,9 +121,6 @@ void handleKeyup(unsigned char key, int x, int y) {
 		case 'h':	// Move high
 			PAC_Position.y = 0;
 			break;
-		case 'l':	// Move low
-			PAC_Position.y = 0;
-			break;
 	}
 }
 
@@ -138,6 +134,9 @@ void initRendering() {
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+
+    Image* floor = loadBMP("images/test.bmp");
+    floorTex = loadTexture(floor);
 
 	loadModels();
 }
@@ -157,22 +156,22 @@ void PAC_Update(int value) {
 		// Nothing to do
 		break;
 	case FORWARD:
-		if(abs((PAC_Position.z - PAC_RADIUS - PAC_PosInc)) < GAME_BASE_SIZE) {
+		if(absf((PAC_Position.z - PAC_RADIUS - PAC_PosInc)) < GameBaseSize.z) {
 			PAC_Position.z -= PAC_PosInc;
 		}
 		break;
 	case BACKWARD:
-		if(abs((PAC_Position.z + PAC_RADIUS + PAC_PosInc)) < GAME_BASE_SIZE) {
+		if(absf((PAC_Position.z + PAC_RADIUS + PAC_PosInc)) < GameBaseSize.z) {
 			PAC_Position.z += PAC_PosInc;
 		}
 		break;
 	case LEFT:
-		if(abs((PAC_Position.x - PAC_RADIUS - PAC_PosInc)) < GAME_BASE_SIZE) {
+		if(absf((PAC_Position.x - PAC_RADIUS - PAC_PosInc)) < GameBaseSize.x) {
 			PAC_Position.x -= PAC_PosInc;
 		}
 		break;
 	case RIGHT:
-		if(abs((PAC_Position.x + PAC_RADIUS + PAC_PosInc)) < GAME_BASE_SIZE) {
+		if(absf((PAC_Position.x + PAC_RADIUS + PAC_PosInc)) < GameBaseSize.x) {
 			PAC_Position.x += PAC_PosInc;
 		}
 		break;

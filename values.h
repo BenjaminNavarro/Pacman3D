@@ -32,9 +32,10 @@ typedef enum {
 } direction;
 
 #define 	setVect3(vec, xv , yv , zv) 	vec.x = xv; vec.y = yv; vec.z = zv;
+#define		absf( x )						(x < 0.0f ? -1.0f*x : x)				// Absolute value function for floating point numbers
 
 /***				Pacman related values				***/
-#define 	PAC_RADIUS		0.2
+#define 	PAC_RADIUS		0.1
 
 extern 		direction 		PAC_Direction;		// The direction where pacman should go
 extern 		point			PAC_Position;		// The position of pacman in the level
@@ -43,7 +44,7 @@ extern		point			PAC_Angle;			// The orientation of pacman
 
 
 /***				General values						***/
-#define 	GAME_BASE_SIZE	2.0
+extern		point			GameBaseSize;
 
 extern		int			speed;					// timers update period in milliseconds
 
