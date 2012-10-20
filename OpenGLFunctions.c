@@ -135,7 +135,7 @@ void initRendering() {
     glEnable(GL_LIGHT0);
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
-    Image* floor = loadBMP("images/test.bmp");
+    Image* floor = loadBMP("images/floor.bmp");
     floorTex = loadTexture(floor);
 
 	loadModels();
