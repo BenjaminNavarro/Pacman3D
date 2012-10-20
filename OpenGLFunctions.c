@@ -4,7 +4,7 @@
 GLMmodel*  	model;			        // glm model data structure
 GLfloat    	scale;			        // original scale factor
 GLuint		floorTex;				// handle for the floor texture
-float 		camAngle = 45.0f;
+float 		camAngle = 90.0f;
 
 //Draws the 3D scene
 void drawScene() {
@@ -35,6 +35,27 @@ void drawScene() {
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
+
+#if SHOW_GRID
+
+	glBegin(GL_LINES);
+
+		float winc = (2*GameBaseSize.x) / (float)N_SQUARES_W;
+		float hinc = (2*GameBaseSize.z) / (float)N_SQUARES_H;
+
+		for(int w=0; w<=N_SQUARES_W; w++) {
+		    glVertex3f(-GameBaseSize.x + winc*w, 0.001,  GameBaseSize.z);
+		    glVertex3f(-GameBaseSize.x + winc*w, 0.001, -GameBaseSize.z);
+		}
+
+		for(int h=0; h<=N_SQUARES_H; h++) {
+		    glVertex3f( GameBaseSize.x, 0.001, -GameBaseSize.z + hinc*h);
+		    glVertex3f(-GameBaseSize.x, 0.001, -GameBaseSize.z + hinc*h);
+		}
+
+	glEnd();
+
+#endif
 
     glPushMatrix();
 
@@ -90,6 +111,9 @@ void handleKeypress(unsigned char key, int x, int y) {
 		case 27: //Escape key
 			glDeleteTextures(1,&floorTex);
 			exit(0);
+			break;
+		case 'a':	// Stop (for testing purposes)
+			PAC_Direction = NONE;
 			break;
 		case 'z':	// Move forward
 			PAC_Direction = FORWARD;

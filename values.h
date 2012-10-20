@@ -45,7 +45,9 @@ extern		point			PAC_Angle;			// The orientation of pacman
 
 /***				General values						***/
 extern		point			GameBaseSize;
+extern		int				speed;				// timers update period in milliseconds
 
-extern		int			speed;					// timers update period in milliseconds
+#define		N_SQUARES_W		28
+#define		N_SQUARES_H		31
 
 #endif /* VALUES_H_ */

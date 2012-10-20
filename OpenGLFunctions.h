@@ -1,6 +1,7 @@
 #ifndef _OPENGLFUNCTIONS_
 #define _OPENGLFUNCTIONS_
 
+/***				Includes					***/
 // Standard libraries
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,6 +18,9 @@
 // Personnal libraries
 #include "privateFunctions.h"
 #include "values.h"
+
+/***				Defines						***/
+#define SHOW_GRID		1
 
 /***				Prototypes					***/
 void drawScene();
