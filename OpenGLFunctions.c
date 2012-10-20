@@ -4,7 +4,7 @@
 GLMmodel*  	model;			        /* glm model data structure */
 GLfloat    	scale;			        /* original scale factor */
 
-float 		camAngle = 45.0f;
+float 		camAngle = 90.0f;
 
 void loadModels(void) {
 
@@ -24,10 +24,14 @@ void drawScene() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+	glLoadIdentity();
 
-	glTranslatef(0.0f, 0.0f, -5.5f);
+	// translate the camera to follow pacman
+	// Projection of pacman's z coordinate on the y and z axes depending on the camera angle
+	glTranslatef(-PAC_Position.x, PAC_Position.z*sin(degToRad(camAngle)), -4.0f - PAC_Position.z*cos(degToRad(camAngle)));
 	glRotatef(camAngle,1,0,0);
+
+	printf("camAngle : %g\n",camAngle);
 
 	glPushMatrix();
 		glColorRGB(0xAA, 0xAA, 0xAA);
@@ -38,19 +42,41 @@ void drawScene() {
 
 		point base={GAME_BASE_SIZE,0,GAME_BASE_SIZE};
 
-	    glVertex3f(-base.x, base.y, base.z);
-	    glVertex3f(base.x, base.y, base.z);
-	    glVertex3f(base.x, base.y, -base.z);
-	    glVertex3f(-base.x, base.y, -base.z);
+		glVertex3f(-base.x, 	base.y, 	base.z);
+		glVertex3f(	base.x, 	base.y, 	base.z);
+		glVertex3f(	base.x, 	base.y,    -base.z);
+		glVertex3f(-base.x, 	base.y,    -base.z);
 
 	glEnd();
 
     glPushMatrix();
 
 		glTranslatef(PAC_Position.x, PAC_RADIUS + PAC_Position.y, PAC_Position.z);
-    	glScalef(PAC_RADIUS,PAC_RADIUS,PAC_RADIUS);
+		glScalef(PAC_RADIUS,PAC_RADIUS,PAC_RADIUS);
 
-    	glmDraw(model, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+		switch (PAC_Direction) {
+		case NONE:
+			// Nothing to do
+			break;
+		case FORWARD:
+			setVect3(PAC_Angle, 0, 180, 0);
+			glRotatef(180, 0, 1, 0);
+			break;
+		case BACKWARD:
+			setVect3(PAC_Angle, 0, 0, 0);
+			// Standard orientation
+			break;
+		case LEFT:
+			setVect3(PAC_Angle, 0, -90, 0);
+			glRotatef(-90, 0, 1, 0);
+			break;
+		case RIGHT:
+			setVect3(PAC_Angle, 0, 90, 0);
+			glRotatef(90, 0, 1, 0);
+			break;
+		}
+
+		glmDraw(model, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
 
 	glPopMatrix();
 
@@ -80,6 +106,12 @@ void handleKeypress(unsigned char key, int x, int y) {
 			break;
 		case 'l':	// Move low
 			PAC_Position.y = -1;
+			break;
+		case 'p':	// Move low
+			camAngle += 1;
+			break;
+		case 'm':	// Move low
+			camAngle -= 1;
 			break;
 	}
 }

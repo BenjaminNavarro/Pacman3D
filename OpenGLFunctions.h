@@ -4,6 +4,7 @@
 // Standard libraries
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 // OpenGL / GLUT libraries
 #include "OpenGLHeader.h"

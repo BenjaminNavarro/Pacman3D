@@ -37,3 +37,7 @@ void glColorRGBAlpha(unsigned char r, unsigned char g, unsigned char b, float al
 
 	glColor4f(red, green, blue, alpha);
 }
+
+float degToRad(float angle) {
+	return (angle * M_PI / 180.0);
+}
