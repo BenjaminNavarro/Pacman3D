@@ -18,6 +18,7 @@
 // Personnal libraries
 #include "privateFunctions.h"
 #include "values.h"
+#include "gameFunctions.h"
 
 /***				Defines						***/
 #define SHOW_GRID		1

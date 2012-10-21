@@ -16,4 +16,4 @@ point		PAC_Angle		= {0,0,0};
 /***				General values						***/
 point		GameBaseSize = {2.0f , 0,  2.217f};
 
-int		speed = 10;
+int		speed = 30;

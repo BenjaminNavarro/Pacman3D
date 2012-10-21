@@ -23,6 +23,11 @@ typedef struct {
 	float z1, z2;
 } line;
 
+typedef struct {
+	unsigned int x;
+	unsigned int z;
+} gridPosition;
+
 typedef enum {
 	NONE		=0,
 	FORWARD		=1,
@@ -30,6 +35,13 @@ typedef enum {
 	LEFT		=4,
 	RIGHT		=8
 } direction;
+
+typedef unsigned char bool;
+
+enum {
+	false = 0,
+	true
+};
 
 #define 	setVect3(vec, xv , yv , zv) 	vec.x = xv; vec.y = yv; vec.z = zv;
 #define		absf( x )						(x < 0.0f ? -1.0f*x : x)				// Absolute value function for floating point numbers
