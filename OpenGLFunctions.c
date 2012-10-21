@@ -20,27 +20,33 @@ void drawScene() {
 	glTranslatef(-PAC_Position.x, PAC_Position.z*sin(degToRad(camAngle)), -2.0f - PAC_Position.z*cos(degToRad(camAngle)));
 	glRotatef(camAngle,1,0,0);
 
+	// Enable the use of 2D textures
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, floorTex);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// Load the floor texture
+		glBindTexture(GL_TEXTURE_2D, floorTex);
 
-	// Draw the bottom base square
-	glBegin(GL_QUADS);
+		// Set the texture rendering to linear
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		glTexCoord2f(0,0); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
-		glTexCoord2f(1,0); glVertex3f(	GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
-		glTexCoord2f(1,1); glVertex3f(	GameBaseSize.x, 	GameBaseSize.y,    -GameBaseSize.z);
-		glTexCoord2f(0,1); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y,    -GameBaseSize.z);
+		// Draw the bottom base square
+		glBegin(GL_QUADS);
 
-	glEnd();
+			glTexCoord2f(0,0); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
+			glTexCoord2f(1,0); glVertex3f(	GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
+			glTexCoord2f(1,1); glVertex3f(	GameBaseSize.x, 	GameBaseSize.y,    -GameBaseSize.z);
+			glTexCoord2f(0,1); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y,    -GameBaseSize.z);
+
+		glEnd();
 
 	glDisable(GL_TEXTURE_2D);
 
 	// Draw the content of the game board : coins, big coins, fruits
 	renderGame();
 
+	// Display the score on the screen
+	displayScore();
 
 #if SHOW_GRID
 
@@ -175,12 +181,8 @@ void initRendering() {
 
 	loadModels();
 
-	for(int i=0;i<N_CELLS_H;i++) {
-		for(int j=0;j<N_CELLS_W;j++) {
-			printf("%c ",GameBoard[i][j] == WALL ? 'O' : ' ');
-		}
-		printf("\n");
-	}
+	t3dInit();
+
 }
 
 //Called when the window is resized

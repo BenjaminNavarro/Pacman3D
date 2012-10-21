@@ -74,7 +74,11 @@ bool onCellCenter(point position, gridPosition cell) {
 	return false;
 }
 
-
+/**
+  * @brief  This function handles the moves of Pacman
+  * @param  The direction where Pacman should go
+  * @retval None
+  */
 void movePacman(direction dir) {
 	static gridPosition	currentPosition;
 	static gridPosition	nextPosition;
@@ -84,7 +88,7 @@ void movePacman(direction dir) {
 	// Locate Pacman on the grid
 	currentPosition = locateOnGrid(PAC_Position);
 
-	// Test if the next cell is a correct one
+	// Test if the next cell is a correct one, if it's not Pacman is stopped
 	switch (dir) {
 		case NONE:
 			break;
@@ -132,11 +136,13 @@ void movePacman(direction dir) {
 				break;
 		}
 
+		// Left teleportation gate
 		if(nextPosition.x == 0) {
 			PAC_Position.x = GameBaseSize.x;
 			nextPosition.x = N_CELLS_W-2;
 		}
 
+		// Right teleportation gate
 		if(nextPosition.x == N_CELLS_W-1) {
 			PAC_Position.x = -GameBaseSize.x;
 			nextPosition.x = 1;
@@ -146,6 +152,7 @@ void movePacman(direction dir) {
 		moving = true;
 	}
 	else {
+		// Move Pacman of PAC_PosInc in the correct direction
 		switch (currentDirection) {
 		case NONE:
 			// Nothing to do
@@ -164,8 +171,12 @@ void movePacman(direction dir) {
 			break;
 		}
 
-		if(onCellCenter(PAC_Position, nextPosition))
+		// If the next position is reach Pacman is stopped and we check
+		// if there is some action to do (take a coin for example)
+		if(onCellCenter(PAC_Position, nextPosition)) {
 			moving = false;
+			checkCellAction(nextPosition);
+		}
 	}
 
 }
@@ -211,6 +222,60 @@ void renderGame() {
 			}
 		}
 	}
+
+	glDisable(GL_COLOR_MATERIAL);
+}
+
+/**
+  * @brief  Checks if something have to be done if Pacman is on the specified cell
+  * @param  The cell to check
+  * @retval None
+  */
+void checkCellAction(gridPosition grid) {
+	switch(GameBoard[grid.z][grid.x]) {
+	case EMPTY:
+		break;
+
+	case COIN:
+		GameBoard[grid.z][grid.x] = EMPTY;
+		score += COIN_POINTS;
+		break;
+
+	case BIGCOIN:
+		GameBoard[grid.z][grid.x] = EMPTY;
+		score += BIGCOIN_POINTS;
+		break;
+	default:
+		break;
+	}
+}
+
+/**
+  * @brief  Displays the score on the screen
+  * @param  None
+  * @retval None
+  */
+void displayScore() {
+	char textScore[50];
+
+	sprintf(textScore,"%d",score);
+
+	glEnable(GL_COLOR_MATERIAL);
+
+	glPushMatrix();
+		glColor3f(10,10,10);
+		glScalef(0.1,0.1,0.1);
+
+		glTranslatef(10*PAC_Position.x + 12, 2, 10*PAC_Position.z - 12);
+		glRotatef(-camAngle, 1, 0, 0);
+
+
+		t3dDraw2D("Score", 0, 0, 0);
+
+		glTranslatef(0, -1.5, 0);
+		t3dDraw2D(textScore, 0, 0, 0);
+
+	glPopMatrix();
 
 	glDisable(GL_COLOR_MATERIAL);
 }

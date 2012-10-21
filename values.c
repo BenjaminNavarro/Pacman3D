@@ -14,9 +14,9 @@ float		PAC_PosInc 		= 0.01;
 point		PAC_Angle		= {0,0,0};
 
 /***				General values						***/
-point		GameBaseSize = {2.0f , 0,  2.217f};
-
-int		speed = 10;
+point		GameBaseSize 	= {2.0f , 0,  2.217f};
+int			speed 			= 10;
+int			score			= 0;
 
 cellType 	GameBoard[N_CELLS_H][N_CELLS_W] = {
 /*0*/	{WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL,WALL},

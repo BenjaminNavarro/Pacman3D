@@ -19,10 +19,11 @@
 
 // Personnal libraries
 #include "privateFunctions.h"
+#include "text/text3d.h"
 #include "values.h"
 
-/***				Defines						***/
-
+/***				Variable					***/
+extern float camAngle;
 
 /***				Prototypes					***/
 gridPosition 	locateOnGrid(point position);
@@ -30,5 +31,7 @@ point			gridToPos(gridPosition grid);
 bool			onCellCenter(point position, gridPosition cell);
 void			movePacman(direction dir);
 void			renderGame();
+void			checkCellAction(gridPosition grid);
+void			displayScore();
 
 #endif /* GAMEFUNCTIONS_H_ */
