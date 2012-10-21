@@ -4,7 +4,8 @@
 GLMmodel*  	model;			        // glm model data structure
 GLfloat    	scale;			        // original scale factor
 GLuint		floorTex;				// handle for the floor texture
-float 		camAngle = 90.0f;
+float 		camAngle = 45.0f;
+direction 	newDirection = NONE;
 
 //Draws the 3D scene
 void drawScene() {
@@ -15,7 +16,7 @@ void drawScene() {
 
 	// translate the camera to follow pacman
 	// Projection of pacman's z coordinate on the y and z axes depending on the camera angle
-	glTranslatef(-PAC_Position.x, PAC_Position.z*sin(degToRad(camAngle)), -3.0f - PAC_Position.z*cos(degToRad(camAngle)));
+	glTranslatef(-PAC_Position.x, PAC_Position.z*sin(degToRad(camAngle)), -2.0f - PAC_Position.z*cos(degToRad(camAngle)));
 	glRotatef(camAngle,1,0,0);
 
 	glEnable(GL_TEXTURE_2D);
@@ -62,7 +63,7 @@ void drawScene() {
 	glTranslatef(PAC_Position.x, PAC_RADIUS + PAC_Position.y, PAC_Position.z);
 	glScalef(PAC_RADIUS,PAC_RADIUS,PAC_RADIUS);
 
-	switch (PAC_Direction) {
+	switch (newDirection) {
 	case NONE:
 		// Nothing to do
 		break;
@@ -104,7 +105,9 @@ void loadModels(void) {
 
 	glEnable(GL_CULL_FACE);
 
-	PAC_Position = gridToPos(locateOnGrid(PAC_Position));
+	gridPosition grid = {14,17};
+
+	PAC_Position = gridToPos(grid);
 }
 
 //Called when a key is pressed
@@ -166,6 +169,13 @@ void initRendering() {
 	floorTex = loadTexture(floor);
 
 	loadModels();
+
+	for(int i=0;i<N_CELLS_H;i++) {
+		for(int j=0;j<N_CELLS_W;j++) {
+			printf("%c ",GameBoard[i][j] == WALL ? 'O' : ' ');
+		}
+		printf("\n");
+	}
 }
 
 //Called when the window is resized
@@ -177,16 +187,33 @@ void handleResize(int w, int h) {
 }
 
 void PAC_Update(int value) {
+	static gridPosition	currentPosition;
 
-	gridPosition grid = locateOnGrid(PAC_Position);
+	// Locate Pacman on the grid
+	currentPosition = locateOnGrid(PAC_Position);
 
-	if((PAC_Direction == LEFT && grid.x > 0) || (PAC_Direction == RIGHT && grid.x < N_CELLS_W-1) || (PAC_Direction == FORWARD && grid.z > 0) || (PAC_Direction == BACKWARD && grid.z < N_CELLS_H-1)) {
-		movePacman(PAC_Direction);
+	switch (PAC_Direction) {
+		case NONE:
+			break;
+		case FORWARD:
+			if(GameBoard[currentPosition.z - 1][currentPosition.x] != WALL)
+				newDirection = PAC_Direction;
+			break;
+		case BACKWARD:
+			if(GameBoard[currentPosition.z + 1][currentPosition.x] != WALL)
+				newDirection = PAC_Direction;
+			break;
+		case LEFT:
+			if(GameBoard[currentPosition.z][currentPosition.x - 1] != WALL)
+				newDirection = PAC_Direction;
+			break;
+		case RIGHT:
+			if(GameBoard[currentPosition.z][currentPosition.x + 1] != WALL)
+				newDirection = PAC_Direction;
+			break;
 	}
-	else {
-		PAC_Direction = NONE;
-		movePacman(PAC_Direction);
-	}
+
+	movePacman(newDirection);
 
 	glutPostRedisplay();
 	glutTimerFunc(speed, PAC_Update, 0);

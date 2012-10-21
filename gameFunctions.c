@@ -81,10 +81,33 @@ void movePacman(direction dir) {
 	static bool 		moving = false;
 	static direction	currentDirection = NONE;
 
+	// Locate Pacman on the grid
+	currentPosition = locateOnGrid(PAC_Position);
+
+	// Test if the next cell is a correct one
+	switch (dir) {
+		case NONE:
+			break;
+		case FORWARD:
+			if(GameBoard[currentPosition.z - 1][currentPosition.x] == WALL)
+				dir = NONE;
+			break;
+		case BACKWARD:
+			if(GameBoard[currentPosition.z + 1][currentPosition.x] == WALL)
+				dir = NONE;
+			break;
+		case LEFT:
+			if(GameBoard[currentPosition.z][currentPosition.x - 1] == WALL)
+				dir = NONE;
+			break;
+		case RIGHT:
+			if(GameBoard[currentPosition.z][currentPosition.x + 1] == WALL)
+				dir = NONE;
+			break;
+	}
+
 	// Test if Pacman is moving
 	if(!moving) {
-		// Locate Pacman on the grid
-		currentPosition = locateOnGrid(PAC_Position);
 
 		// Find the next cell to reach
 		switch (dir) {
@@ -107,6 +130,16 @@ void movePacman(direction dir) {
 				nextPosition.x = currentPosition.x + 1;
 				nextPosition.z = currentPosition.z;
 				break;
+		}
+
+		if(nextPosition.x == 0) {
+			PAC_Position.x = GameBaseSize.x;
+			nextPosition.x = N_CELLS_W-2;
+		}
+
+		if(nextPosition.x == N_CELLS_W-1) {
+			PAC_Position.x = -GameBaseSize.x;
+			nextPosition.x = 1;
 		}
 
 		currentDirection = dir;

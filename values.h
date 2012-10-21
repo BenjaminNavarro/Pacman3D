@@ -36,6 +36,15 @@ typedef enum {
 	RIGHT		=8
 } direction;
 
+typedef enum {
+	EMPTY,
+	COIN,
+	BIGCOIN,
+	FRUIT,
+	WALL,
+	GHOSTOUT
+} cellType;
+
 typedef unsigned char bool;
 
 enum {
@@ -60,5 +69,7 @@ extern		int				speed;				// timers update period in milliseconds
 
 #define		N_CELLS_W		28
 #define		N_CELLS_H		31
+
+extern		cellType		GameBoard[N_CELLS_H][N_CELLS_W];
 
 #endif /* VALUES_H_ */
