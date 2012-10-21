@@ -44,7 +44,6 @@ enum {
 };
 
 #define 	setVect3(vec, xv , yv , zv) 	vec.x = xv; vec.y = yv; vec.z = zv;
-#define		absf( x )						(x < 0.0f ? -1.0f*x : x)				// Absolute value function for floating point numbers
 
 /***				Pacman related values				***/
 #define 	PAC_RADIUS		0.1
@@ -59,7 +58,7 @@ extern		point			PAC_Angle;			// The orientation of pacman
 extern		point			GameBaseSize;
 extern		int				speed;				// timers update period in milliseconds
 
-#define		N_SQUARES_W		28
-#define		N_SQUARES_H		31
+#define		N_CELLS_W		28
+#define		N_CELLS_H		31
 
 #endif /* VALUES_H_ */

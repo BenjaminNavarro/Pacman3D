@@ -26,7 +26,7 @@
 /***				Prototypes					***/
 gridPosition 	locateOnGrid(point position);
 point			gridToPos(gridPosition grid);
-bool			onXCenter(point position);
-bool			onZCenter(point position);
+bool			onCellCenter(point position, gridPosition cell);
+void			movePacman(direction dir);
 
 #endif /* GAMEFUNCTIONS_H_ */
