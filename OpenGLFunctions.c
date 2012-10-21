@@ -9,6 +9,7 @@ direction 	newDirection = NONE;
 
 //Draws the 3D scene
 void drawScene() {
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -28,14 +29,18 @@ void drawScene() {
 	// Draw the bottom base square
 	glBegin(GL_QUADS);
 
-	glTexCoord2f(0,0); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
-	glTexCoord2f(1,0); glVertex3f(	GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
-	glTexCoord2f(1,1); glVertex3f(	GameBaseSize.x, 	GameBaseSize.y,    -GameBaseSize.z);
-	glTexCoord2f(0,1); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y,    -GameBaseSize.z);
+		glTexCoord2f(0,0); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
+		glTexCoord2f(1,0); glVertex3f(	GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
+		glTexCoord2f(1,1); glVertex3f(	GameBaseSize.x, 	GameBaseSize.y,    -GameBaseSize.z);
+		glTexCoord2f(0,1); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y,    -GameBaseSize.z);
 
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
+
+	// Draw the content of the game board : coins, big coins, fruits
+	renderGame();
+
 
 #if SHOW_GRID
 
@@ -60,32 +65,32 @@ void drawScene() {
 
 	glPushMatrix();
 
-	glTranslatef(PAC_Position.x, PAC_RADIUS + PAC_Position.y, PAC_Position.z);
-	glScalef(PAC_RADIUS,PAC_RADIUS,PAC_RADIUS);
+		glTranslatef(PAC_Position.x, PAC_RADIUS + PAC_Position.y, PAC_Position.z);
+		glScalef(PAC_RADIUS,PAC_RADIUS,PAC_RADIUS);
 
-	switch (newDirection) {
-	case NONE:
-		// Nothing to do
-		break;
-	case FORWARD:
-		setVect3(PAC_Angle, 0, 180, 0);
-		glRotatef(180, 0, 1, 0);
-		break;
-	case BACKWARD:
-		setVect3(PAC_Angle, 0, 0, 0);
-		// Standard orientation
-		break;
-	case LEFT:
-		setVect3(PAC_Angle, 0, -90, 0);
-		glRotatef(-90, 0, 1, 0);
-		break;
-	case RIGHT:
-		setVect3(PAC_Angle, 0, 90, 0);
-		glRotatef(90, 0, 1, 0);
-		break;
-	}
+		switch (newDirection) {
+		case NONE:
+			// Nothing to do
+			break;
+		case FORWARD:
+			setVect3(PAC_Angle, 0, 180, 0);
+			glRotatef(180, 0, 1, 0);
+			break;
+		case BACKWARD:
+			setVect3(PAC_Angle, 0, 0, 0);
+			// Standard orientation
+			break;
+		case LEFT:
+			setVect3(PAC_Angle, 0, -90, 0);
+			glRotatef(-90, 0, 1, 0);
+			break;
+		case RIGHT:
+			setVect3(PAC_Angle, 0, 90, 0);
+			glRotatef(90, 0, 1, 0);
+			break;
+		}
 
-	glmDraw(model, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+		glmDraw(model, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
 
 	glPopMatrix();
 

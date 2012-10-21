@@ -169,3 +169,48 @@ void movePacman(direction dir) {
 	}
 
 }
+
+/**
+  * @brief  Draw the differents elements present on the game board
+  * @param  None
+  * @retval None
+  */
+void renderGame() {
+	point 			position;
+	gridPosition 	grid;
+
+	glEnable(GL_COLOR_MATERIAL);
+
+	for(int zcell=0; zcell<N_CELLS_H; zcell++) {
+		for(int xcell=0; xcell<N_CELLS_W; xcell++) {
+			grid.x = xcell;
+			grid.z = zcell;
+			position = gridToPos(grid);
+
+			switch(GameBoard[zcell][xcell]) {
+			case EMPTY:
+				break;
+
+			case COIN:
+				glPushMatrix();
+					glColorRGB(0xFC, 0xF2, 0x7B);									// Yellow
+					glTranslatef(position.x, OBJECTS_HEIGHT, position.z);
+					glutSolidSphere(COIN_RADIUS , 8 , 8 );
+				glPopMatrix();
+				break;
+
+			case BIGCOIN:
+				glPushMatrix();
+					glColorRGB(0xFC, 0xF2, 0x7B);										// Yellow
+					glTranslatef(position.x, OBJECTS_HEIGHT, position.z);
+					glutSolidSphere(BIGCOIN_RADIUS , 16 , 16 );
+				glPopMatrix();
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	glDisable(GL_COLOR_MATERIAL);
+}

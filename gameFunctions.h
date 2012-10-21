@@ -18,6 +18,7 @@
 #include "OpenGLHeader.h"
 
 // Personnal libraries
+#include "privateFunctions.h"
 #include "values.h"
 
 /***				Defines						***/
@@ -28,5 +29,6 @@ gridPosition 	locateOnGrid(point position);
 point			gridToPos(gridPosition grid);
 bool			onCellCenter(point position, gridPosition cell);
 void			movePacman(direction dir);
+void			renderGame();
 
 #endif /* GAMEFUNCTIONS_H_ */
