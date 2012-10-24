@@ -1,9 +1,10 @@
 #include "OpenGLFunctions.h"
 
 /***				Global variables			***/
-GLMmodel*  	model;			        // glm model data structure
-GLfloat    	scale;			        // original scale factor
-GLuint		floorTex;				// handle for the floor texture
+GLMmodel*  	PacmanModel;						// glm model data structure for pacman
+GLMmodel*	PacmanAnimation[PAC_ANIM_FRAMES];	// array of the different pacman models
+GLMmodel*	Ghost[GHOST_COUNT];					// array of the different ghosts models
+GLuint		floorTex;							// handle for the floor texture
 float 		camAngle = 45.0f;
 direction 	newDirection = NONE;
 
@@ -96,7 +97,17 @@ void drawScene() {
 			break;
 		}
 
-		glmDraw(model, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+		glmDraw(PacmanModel, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+
+	glPopMatrix();
+
+	glPushMatrix();
+
+		glTranslatef(Ghost_Position[0].x, GHOST_SCALE + Ghost_Position[0].y, Ghost_Position[0].z);
+		glRotatef(90, 0, 1, 0);
+		glScalef(GHOST_SCALE,GHOST_SCALE,GHOST_SCALE);
+
+		glmDraw(Ghost[0], GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
 
 	glPopMatrix();
 
@@ -106,11 +117,26 @@ void drawScene() {
 // Loads the differents models used
 void loadModels(void) {
 
-	/* read in the pacman model */
-	model = glmReadOBJ("models/pacman.obj");
-	scale = glmUnitize(model);
-	glmFacetNormals(model);
-	glmVertexNormals(model, 90.0f);
+	char file[30];
+
+	for(int i=0; i<PAC_ANIM_FRAMES; i++) {
+		sprintf(file, "models/animation/pacman_%d.obj",i);			// Set the path to the frame model
+		PacmanAnimation[i] = glmReadOBJ(file);						// Read it
+		glmUnitize(PacmanAnimation[i]);								// Put it the (0,0,0) with a size of 1
+		glmFacetNormals(PacmanAnimation[i]);						// Generates the facet normals
+		glmVertexNormals(PacmanAnimation[i], 90.0f);				// Smooth the model up to 90¡
+	}
+
+	for(int i=0; i<GHOST_COUNT; i++) {
+		sprintf(file, "models/redGhost.obj");			// Set the path to the frame model
+		Ghost[i] = glmReadOBJ(file);						// Read it
+		glmUnitize(Ghost[i]);								// Put it the (0,0,0) with a size of 1
+		glmFacetNormals(Ghost[i]);						// Generates the facet normals
+		glmVertexNormals(Ghost[i], 90.0f);				// Smooth the model up to 90¡
+	}
+
+	// Set PacmanModel pointing to the first frame
+	PacmanModel = PacmanAnimation[0];
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -119,6 +145,10 @@ void loadModels(void) {
 	gridPosition grid = {14,17};
 
 	PAC_Position = gridToPos(grid);
+
+	grid.x = 15;
+
+	Ghost_Position[0] = gridToPos(grid);
 }
 
 //Called when a key is pressed
@@ -183,6 +213,8 @@ void initRendering() {
 
 	t3dInit();
 
+	srand(time(NULL));
+
 }
 
 //Called when the window is resized
@@ -222,6 +254,44 @@ void PAC_Update(int value) {
 
 	movePacman(newDirection);
 
-	glutPostRedisplay();
 	glutTimerFunc(speed, PAC_Update, 0);
+}
+
+void PAC_Animation(int value) {
+	static int frame = 0;
+	static bool up = true;
+
+	if(up) {
+		PacmanModel = PacmanAnimation[frame++];
+
+		if(frame == PAC_ANIM_FRAMES) {
+			up = false;
+			frame -= 2;
+		}
+
+	}
+	if(!up) {
+		PacmanModel = PacmanAnimation[frame--];
+
+		if(frame < 0) {
+			up = true;
+			frame = 1;
+		}
+	}
+
+	glutTimerFunc(animationSpeed, PAC_Animation, 0);
+}
+
+void Ghost_Update(int value) {
+
+	moveGhosts();
+
+	glutTimerFunc(ghostSpeed, Ghost_Update, 0);
+}
+
+// Refresh the display at 50Hz
+void refresh() {
+	glutPostRedisplay();
+
+	glutTimerFunc(20, refresh, 0);
 }

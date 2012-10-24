@@ -30,6 +30,7 @@ gridPosition 	locateOnGrid(point position);
 point			gridToPos(gridPosition grid);
 bool			onCellCenter(point position, gridPosition cell);
 void			movePacman(direction dir);
+void			moveGhosts();
 void			renderGame();
 void			checkCellAction(gridPosition grid);
 void			displayScore();

@@ -55,18 +55,32 @@ enum {
 #define 	setVect3(vec, xv , yv , zv) 	vec.x = xv; vec.y = yv; vec.z = zv;
 
 /***				Pacman related values				***/
-#define 	PAC_RADIUS		0.1
+#define 	PAC_RADIUS		0.07
+
+#define		PAC_ANIM_FRAMES	10
 
 extern 		direction 		PAC_Direction;		// The direction where pacman should go
 extern 		point			PAC_Position;		// The position of pacman in the level
 extern 		float 			PAC_PosInc;			// At each timer update, pacman moves to PAC_PosInc in PAC_Direction
 extern		point			PAC_Angle;			// The orientation of pacman
 
+/***				Ghosts related values				***/
+#define		GHOST_SCALE		0.10
+#define 	GHOST_COUNT		1
+
+extern		direction		Ghost_Direction[GHOST_COUNT];
+extern		point			Ghost_Position[GHOST_COUNT];
+extern		float			Ghost_PosInc[GHOST_COUNT];
+extern		point			Ghost_Angle[GHOST_COUNT];
+
 
 /***				General values						***/
 extern		point			GameBaseSize;
-extern		int				speed;				// timers update period in milliseconds
+extern		int				speed;				// Pacman timer update period in milliseconds
+extern		int				animationSpeed;		// Pacman animation timer update period in milliseconds
+extern		int				ghostSpeed;			// Ghosts timer update period in milliseconds
 extern		int				score;
+extern		int				level;
 
 #define		COIN_POINTS		10
 #define		BIGCOIN_POINTS	50
@@ -74,7 +88,7 @@ extern		int				score;
 #define		N_CELLS_W		28
 #define		N_CELLS_H		31
 
-#define		OBJECTS_HEIGHT	0.1
+#define		OBJECTS_HEIGHT	0.06
 #define		COIN_RADIUS		0.01
 #define		BIGCOIN_RADIUS	0.05
 

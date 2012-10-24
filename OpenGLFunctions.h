@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 // OpenGL / GLUT libraries
 #include "OpenGLHeader.h"
@@ -33,6 +34,9 @@ void handleKeyup(unsigned char key, int x, int y);
 void initRendering();
 void handleResize(int w, int h);
 void PAC_Update(int value);
+void PAC_Animation(int value);
+void Ghost_Update(int value);
+void refresh();
 
 
 #endif
