@@ -62,7 +62,6 @@ enum {
 extern 		direction 		PAC_Direction;		// The direction where pacman should go
 extern 		point			PAC_Position;		// The position of pacman in the level
 extern 		float 			PAC_PosInc;			// At each timer update, pacman moves to PAC_PosInc in PAC_Direction
-extern		point			PAC_Angle;			// The orientation of pacman
 
 /***				Ghosts related values				***/
 #define		GHOST_SCALE		0.10
@@ -71,7 +70,6 @@ extern		point			PAC_Angle;			// The orientation of pacman
 extern		direction		Ghost_Direction[GHOST_COUNT];
 extern		point			Ghost_Position[GHOST_COUNT];
 extern		float			Ghost_PosInc[GHOST_COUNT];
-extern		point			Ghost_Angle[GHOST_COUNT];
 
 
 /***				General values						***/
@@ -81,6 +79,9 @@ extern		int				animationSpeed;		// Pacman animation timer update period in milli
 extern		int				ghostSpeed;			// Ghosts timer update period in milliseconds
 extern		int				score;
 extern		int				level;
+
+#define 	SCREEN_WIDTH	800
+#define		SCREEN_HEIGHT	600
 
 #define		COIN_POINTS		10
 #define		BIGCOIN_POINTS	50

@@ -390,24 +390,43 @@ void checkCellAction(gridPosition grid) {
 void displayScore() {
 	char textScore[50];
 
-	sprintf(textScore,"%d",score);
-
-	glEnable(GL_COLOR_MATERIAL);
-
+	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glColor3f(10,10,10);
-	glScalef(0.1,0.1,0.1);
+	glLoadIdentity();
+	glOrtho(0.0, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0, -1.0, 10.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glDisable(GL_CULL_FACE);
 
-	glTranslatef(10*PAC_Position.x + 12, 2, 10*PAC_Position.z - 12);
-	glRotatef(-camAngle, 1, 0, 0);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+		sprintf(textScore,"%d",score);
+
+		glEnable(GL_COLOR_MATERIAL);
+
+		glPushMatrix();
+
+			glColor3f(10,10,10);
+			glScalef(0.1,0.1,0.1);
+
+			//glTranslatef(10*PAC_Position.x + 12, 2, 10*PAC_Position.z - 12);
+			//glRotatef(-camAngle, 1, 0, 0);
 
 
-	t3dDraw2D("Score", 0, 0, 0);
+			t3dDraw2D("Score", 0, 0, 0);
 
-	glTranslatef(0, -1.5, 0);
-	t3dDraw2D(textScore, 0, 0, 0);
+			glTranslatef(0, -1.5, 0);
+			t3dDraw2D(textScore, 0, 0, 0);
 
+		glPopMatrix();
+
+		glDisable(GL_COLOR_MATERIAL);
+
+	// Making sure we can render 3d again
+	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
 
-	glDisable(GL_COLOR_MATERIAL);
+
+
 }

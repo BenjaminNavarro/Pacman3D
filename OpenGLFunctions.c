@@ -46,9 +46,6 @@ void drawScene() {
 	// Draw the content of the game board : coins, big coins, fruits
 	renderGame();
 
-	// Display the score on the screen
-	displayScore();
-
 #if SHOW_GRID
 
 	glBegin(GL_LINES);
@@ -80,19 +77,15 @@ void drawScene() {
 			// Nothing to do
 			break;
 		case FORWARD:
-			setVect3(PAC_Angle, 0, 180, 0);
 			glRotatef(180, 0, 1, 0);
 			break;
 		case BACKWARD:
-			setVect3(PAC_Angle, 0, 0, 0);
 			// Standard orientation
 			break;
 		case LEFT:
-			setVect3(PAC_Angle, 0, -90, 0);
 			glRotatef(-90, 0, 1, 0);
 			break;
 		case RIGHT:
-			setVect3(PAC_Angle, 0, 90, 0);
 			glRotatef(90, 0, 1, 0);
 			break;
 		}
@@ -103,13 +96,37 @@ void drawScene() {
 
 	glPushMatrix();
 
-		glTranslatef(Ghost_Position[0].x, GHOST_SCALE + Ghost_Position[0].y, Ghost_Position[0].z);
-		glRotatef(90, 0, 1, 0);
-		glScalef(GHOST_SCALE,GHOST_SCALE,GHOST_SCALE);
+		for(int i=0; i<GHOST_COUNT; i++) {
 
-		glmDraw(Ghost[0], GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+			glTranslatef(Ghost_Position[i].x, GHOST_SCALE + Ghost_Position[i].y, Ghost_Position[i].z);
+			glScalef(GHOST_SCALE,GHOST_SCALE,GHOST_SCALE);
+
+			switch (Ghost_Direction[i]) {
+			case NONE:
+				// Nothing to do
+				break;
+			case FORWARD:
+				glRotatef(-90, 0, 1, 0);
+				break;
+			case BACKWARD:
+				glRotatef(90, 0, 1, 0);
+				break;
+			case LEFT:
+				// Standard orientation
+				break;
+			case RIGHT:
+				glRotatef(180, 0, 1, 0);
+				break;
+			}
+
+			glmDraw(Ghost[i], GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+
+		}
 
 	glPopMatrix();
+
+	// Display the score on the screen
+	displayScore();
 
 	glutSwapBuffers();
 }

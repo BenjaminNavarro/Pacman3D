@@ -11,13 +11,11 @@
 direction 	PAC_Direction 	= NONE;
 point		PAC_Position 	= {0, 0, 0};
 float		PAC_PosInc 		= 0.01;
-point		PAC_Angle		= {0,0,0};
 
 /***				Ghost related values				***/
 direction		Ghost_Direction[GHOST_COUNT];
 point			Ghost_Position[GHOST_COUNT];
 float			Ghost_PosInc[GHOST_COUNT] = {0.01};
-point			Ghost_Angle[GHOST_COUNT];
 
 /***				General values						***/
 point		GameBaseSize 	= {2.0f , 0,  2.217f};
