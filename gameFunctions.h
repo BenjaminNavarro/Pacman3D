@@ -34,5 +34,6 @@ void			moveGhosts();
 void			renderGame();
 void			checkCellAction(gridPosition grid);
 void			displayScore();
+gridPosition	getNextPosition();
 
 #endif /* GAMEFUNCTIONS_H_ */

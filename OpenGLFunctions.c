@@ -243,28 +243,31 @@ void handleResize(int w, int h) {
 }
 
 void PAC_Update(int value) {
-	static gridPosition	currentPosition;
+	gridPosition	nextPosition;
 
 	// Locate Pacman on the grid
-	currentPosition = locateOnGrid(PAC_Position);
+	if(PAC_Direction != NONE)
+		nextPosition = getNextPosition();
+	else
+		nextPosition = locateOnGrid(PAC_Position);
 
 	switch (PAC_Direction) {
 		case NONE:
 			break;
 		case FORWARD:
-			if(GameBoard[currentPosition.z - 1][currentPosition.x] != WALL)
+			if(GameBoard[nextPosition.z - 1][nextPosition.x] != WALL)
 				newDirection = PAC_Direction;
 			break;
 		case BACKWARD:
-			if(GameBoard[currentPosition.z + 1][currentPosition.x] != WALL)
+			if(GameBoard[nextPosition.z + 1][nextPosition.x] != WALL)
 				newDirection = PAC_Direction;
 			break;
 		case LEFT:
-			if(GameBoard[currentPosition.z][currentPosition.x - 1] != WALL)
+			if(GameBoard[nextPosition.z][nextPosition.x - 1] != WALL)
 				newDirection = PAC_Direction;
 			break;
 		case RIGHT:
-			if(GameBoard[currentPosition.z][currentPosition.x + 1] != WALL)
+			if(GameBoard[nextPosition.z][nextPosition.x + 1] != WALL)
 				newDirection = PAC_Direction;
 			break;
 	}

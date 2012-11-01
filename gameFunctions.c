@@ -7,6 +7,8 @@
 
 #include "gameFunctions.h"
 
+gridPosition	nextPosition = {14,17};	// Next Pacman position
+
 /**
  * @brief  Finds the grid's cell corresponding to the given position
  * @param  The position (x,z) on the game's boad
@@ -81,7 +83,6 @@ bool onCellCenter(point position, gridPosition cell) {
  */
 void movePacman(direction dir) {
 	static gridPosition	currentPosition;
-	static gridPosition	nextPosition;
 	static bool 		moving = false;
 	static direction	currentDirection = NONE;
 
@@ -429,4 +430,13 @@ void displayScore() {
 
 
 
+}
+
+/**
+  * @brief  Gives the next Pacman position
+  * @param  None
+  * @retval Next Pacman position
+  */
+gridPosition getNextPosition() {
+	return nextPosition;
 }
