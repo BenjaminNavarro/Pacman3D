@@ -306,7 +306,7 @@ void moveGhosts() {
 			// if there is some action to do (take a coin for example)
 			if(onCellCenter(Ghost_Position[i], nextPosition[i])) {
 				moving[i] = false;
-				checkCellAction(nextPosition[i]);
+				//checkCellAction(nextPosition[i]);
 			}
 		}
 
@@ -393,7 +393,7 @@ void displayScore() {
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0.0, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0, -1.0, 10.0);
+	glOrtho(0.0, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0, -1.0, -1.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glDisable(GL_CULL_FACE);
@@ -407,9 +407,9 @@ void displayScore() {
 		glPushMatrix();
 
 			glColor3f(10,10,10);
+			glTranslatef(0.8, 0.9, 0);
 			glScalef(0.1,0.1,0.1);
 
-			//glTranslatef(10*PAC_Position.x + 12, 2, 10*PAC_Position.z - 12);
 			//glRotatef(-camAngle, 1, 0, 0);
 
 
