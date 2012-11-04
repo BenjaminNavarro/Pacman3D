@@ -65,11 +65,11 @@ extern 		float 			PAC_PosInc;			// At each timer update, pacman moves to PAC_Pos
 
 /***				Ghosts related values				***/
 #define		GHOST_SCALE		0.10
-#define 	GHOST_COUNT		1
+#define 	GHOST_COUNT		4
 
 extern		direction		Ghost_Direction[GHOST_COUNT];
 extern		point			Ghost_Position[GHOST_COUNT];
-extern		float			Ghost_PosInc[GHOST_COUNT];
+extern		float			Ghost_PosInc;
 
 
 /***				General values						***/
@@ -77,8 +77,17 @@ extern		point			GameBaseSize;
 extern		int				speed;				// Pacman timer update period in milliseconds
 extern		int				animationSpeed;		// Pacman animation timer update period in milliseconds
 extern		int				ghostSpeed;			// Ghosts timer update period in milliseconds
-extern		int				score;
-extern		int				level;
+extern		int				score;				// Store the player score
+extern		int				level;				// Store the level number
+extern		bool			hunted;				// True if Pacman is hunted by the ghosts, false otherwise
+extern		int				lives;				// Number of lives remaining
+extern		int				comboValue;			// Holds the last combo value
+extern		int				comboTimeRemaining;	// Seconds to the end of combo period
+extern		bool			ghostInit;			// True if the ghosts are sent to home for the first time
+extern		int				coinsLeft;			// Holds the the number of remaining coins to catch
+
+#define		MAX_LIVES		3
+#define		COMBO_TIME		8
 
 #define 	SCREEN_WIDTH	800
 #define		SCREEN_HEIGHT	600
@@ -93,6 +102,7 @@ extern		int				level;
 #define		COIN_RADIUS		0.01
 #define		BIGCOIN_RADIUS	0.05
 
+extern		cellType		GameBoardInit[N_CELLS_H][N_CELLS_W];
 extern		cellType		GameBoard[N_CELLS_H][N_CELLS_W];
 
 #endif /* VALUES_H_ */

@@ -1,12 +1,14 @@
 #include "OpenGLFunctions.h"
 
 /***				Global variables			***/
-GLMmodel*  	PacmanModel;						// glm model data structure for pacman
-GLMmodel*	PacmanAnimation[PAC_ANIM_FRAMES];	// array of the different pacman models
-GLMmodel*	Ghost[GHOST_COUNT];					// array of the different ghosts models
-GLuint		floorTex;							// handle for the floor texture
-float 		camAngle = 45.0f;
-direction 	newDirection = NONE;
+GLMmodel*  		PacmanModel;						// glm model data structure for pacman
+GLMmodel*		PacmanAnimation[PAC_ANIM_FRAMES];	// array of the different pacman models
+GLMmodel*		Ghost[GHOST_COUNT];					// array of the different ghosts models
+GLuint			floorTex;							// handle for the floor texture
+float 			camAngle = 45.0f;
+direction 		newDirection = NONE;
+
+
 
 //Draws the 3D scene
 void drawScene() {
@@ -94,39 +96,44 @@ void drawScene() {
 
 	glPopMatrix();
 
-	glPushMatrix();
+	for(int i=0; i<GHOST_COUNT; i++) {
 
-		for(int i=0; i<GHOST_COUNT; i++) {
+		glPushMatrix();
 
-			glTranslatef(Ghost_Position[i].x, GHOST_SCALE + Ghost_Position[i].y, Ghost_Position[i].z);
-			glScalef(GHOST_SCALE,GHOST_SCALE,GHOST_SCALE);
 
-			switch (Ghost_Direction[i]) {
-			case NONE:
-				// Nothing to do
-				break;
-			case FORWARD:
-				glRotatef(-90, 0, 1, 0);
-				break;
-			case BACKWARD:
-				glRotatef(90, 0, 1, 0);
-				break;
-			case LEFT:
-				// Standard orientation
-				break;
-			case RIGHT:
-				glRotatef(180, 0, 1, 0);
-				break;
-			}
+		glTranslatef(Ghost_Position[i].x, GHOST_SCALE + Ghost_Position[i].y, Ghost_Position[i].z);
+		glScalef(GHOST_SCALE,GHOST_SCALE,GHOST_SCALE);
 
-			glmDraw(Ghost[i], GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
-
+		switch (Ghost_Direction[i]) {
+		case NONE:
+			// Nothing to do
+			break;
+		case FORWARD:
+			glRotatef(180, 0, 1, 0);
+			break;
+		case BACKWARD:
+			glRotatef(0, 0, 1, 0);
+			break;
+		case LEFT:
+			glRotatef(-90, 0, 1, 0);
+			break;
+		case RIGHT:
+			glRotatef(90, 0, 1, 0);
+			break;
 		}
 
-	glPopMatrix();
+		glmDraw(Ghost[i], GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
 
-	// Display the score on the screen
-	displayScore();
+		glPopMatrix();
+
+	}
+
+
+	// Display the HUD on the screen
+	displayHUD();
+
+	// Check if Pacman is touching a ghost
+	checkGhosts();
 
 	glutSwapBuffers();
 }
@@ -145,11 +152,13 @@ void loadModels(void) {
 	}
 
 	for(int i=0; i<GHOST_COUNT; i++) {
-		sprintf(file, "models/redGhost.obj");			// Set the path to the frame model
-		Ghost[i] = glmReadOBJ(file);						// Read it
-		glmUnitize(Ghost[i]);								// Put it the (0,0,0) with a size of 1
-		glmFacetNormals(Ghost[i]);						// Generates the facet normals
-		glmVertexNormals(Ghost[i], 90.0f);				// Smooth the model up to 90¡
+		sprintf(file, "models/ghost_%d.obj",i);						// Set the path to the frame model
+		Ghost[i] = glmReadOBJ(file);								// Read it
+		glmUnitize(Ghost[i]);										// Put it the (0,0,0) with a size of 1
+		glmFacetNormals(Ghost[i]);									// Generates the facet normals
+		glmVertexNormals(Ghost[i], 90.0f);							// Smooth the model up to 90¡
+
+		sendGhostHome(i);											// Move the ghost the its origin position
 	}
 
 	// Set PacmanModel pointing to the first frame
@@ -159,13 +168,8 @@ void loadModels(void) {
 
 	glEnable(GL_CULL_FACE);
 
-	gridPosition grid = {14,17};
+	sendPacmanHome();
 
-	PAC_Position = gridToPos(grid);
-
-	grid.x = 15;
-
-	Ghost_Position[0] = gridToPos(grid);
 }
 
 //Called when a key is pressed
@@ -223,6 +227,8 @@ void initRendering() {
 	glEnable(GL_LIGHT0);
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
+	gameBoardInit();
+
 	Image* floor = loadBMP("images/floor.bmp");
 	floorTex = loadTexture(floor);
 
@@ -234,16 +240,16 @@ void initRendering() {
 
 }
 
-//Called when the window is resized
+//Called when the window is resized, forces the game dimmension to SCREEN_WIDTH and SCREEN_HEIGHT
 void handleResize(int w, int h) {
-	glViewport(0, 0, w, h);
+	glViewport((w - SCREEN_WIDTH)/2, (h - SCREEN_HEIGHT)/2, SCREEN_WIDTH, SCREEN_HEIGHT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(45.0, (double)w / (double)h, 1.0, 200.0);
+	gluPerspective(45.0, (double)SCREEN_WIDTH / (double)SCREEN_HEIGHT, 1.0, 200.0);
 }
 
 void PAC_Update(int value) {
-	gridPosition	nextPosition;
+	static gridPosition	nextPosition;
 
 	// Locate Pacman on the grid
 	if(PAC_Direction != NONE)
@@ -253,6 +259,7 @@ void PAC_Update(int value) {
 
 	switch (PAC_Direction) {
 		case NONE:
+			newDirection = NONE;
 			break;
 		case FORWARD:
 			if(GameBoard[nextPosition.z - 1][nextPosition.x] != WALL)

@@ -18,12 +18,12 @@
 #include "OpenGLHeader.h"
 
 // Personnal libraries
+#include "OpenGLFunctions.h"
 #include "privateFunctions.h"
 #include "text/text3d.h"
 #include "values.h"
 
 /***				Variable					***/
-extern float camAngle;
 
 /***				Prototypes					***/
 gridPosition 	locateOnGrid(point position);
@@ -33,7 +33,16 @@ void			movePacman(direction dir);
 void			moveGhosts();
 void			renderGame();
 void			checkCellAction(gridPosition grid);
-void			displayScore();
+void			displayHUD();
 gridPosition	getNextPosition();
+void			resetPositions();
+void			gameOver();
+void 			sendPacmanHome();
+void			sendGhostHome(int ghostNum);
+void			sendGhostBoard(int ghostNum);
+void			startCombo(int value);
+void 			checkGhosts();
+void			gameBoardInit();
+void			levelUp();
 
 #endif /* GAMEFUNCTIONS_H_ */

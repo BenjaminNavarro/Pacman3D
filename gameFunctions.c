@@ -7,7 +7,11 @@
 
 #include "gameFunctions.h"
 
-gridPosition	nextPosition = {14,17};	// Next Pacman position
+gridPosition	nextPosition = {14,17};				// Next Pacman position
+bool 			ghostMoving[GHOST_COUNT] = {false};	// Tells if the ghost is moving or not
+bool 			PacmanMoving = false;				// Tells if Pacman is moving or not
+bool			ghostHome[GHOST_COUNT] = {false};
+
 
 /**
  * @brief  Finds the grid's cell corresponding to the given position
@@ -83,7 +87,6 @@ bool onCellCenter(point position, gridPosition cell) {
  */
 void movePacman(direction dir) {
 	static gridPosition	currentPosition;
-	static bool 		moving = false;
 	static direction	currentDirection = NONE;
 
 	// Locate Pacman on the grid
@@ -92,6 +95,7 @@ void movePacman(direction dir) {
 	// Test if the next cell is a correct one, if it's not Pacman is stopped
 	switch (dir) {
 	case NONE:
+		currentDirection = NONE;
 		break;
 	case FORWARD:
 		if(GameBoard[currentPosition.z - 1][currentPosition.x] == WALL)
@@ -112,11 +116,14 @@ void movePacman(direction dir) {
 	}
 
 	// Test if Pacman is moving
-	if(!moving) {
+	if(!PacmanMoving) {
 
 		// Find the next cell to reach
 		switch (dir) {
 		case NONE:
+			currentDirection = NONE;
+			nextPosition.x = currentPosition.x;
+			nextPosition.z = currentPosition.z;
 			return;
 			break;
 		case FORWARD:
@@ -150,7 +157,7 @@ void movePacman(direction dir) {
 		}
 
 		currentDirection = dir;
-		moving = true;
+		PacmanMoving = true;
 	}
 	else {
 		// Move Pacman of PAC_PosInc in the correct direction
@@ -175,7 +182,7 @@ void movePacman(direction dir) {
 		// If the next position is reach Pacman is stopped and we check
 		// if there is some action to do (take a coin for example)
 		if(onCellCenter(PAC_Position, nextPosition)) {
-			moving = false;
+			PacmanMoving = false;
 			checkCellAction(nextPosition);
 		}
 	}
@@ -190,7 +197,6 @@ void movePacman(direction dir) {
 void moveGhosts() {
 	static gridPosition	currentPosition[GHOST_COUNT];
 	static gridPosition	nextPosition[GHOST_COUNT];
-	static bool 		moving[GHOST_COUNT] = {false};
 	static direction	currentDirection[GHOST_COUNT] = {NONE};
 	static direction	previousDirection[GHOST_COUNT] = {NONE};
 	float r;
@@ -198,10 +204,13 @@ void moveGhosts() {
 
 	for(int i=0; i<GHOST_COUNT; i++) {
 
+		if(ghostHome[i])
+			continue;
+
 		// Locate the ghost on the grid
 		currentPosition[i] = locateOnGrid(Ghost_Position[i]);
 
-		// Test if the next cell is a correct one, if it's not Pacman is stopped
+		// Test if the next cell is a correct one, if it's not the ghost is sent to a random direction
 		switch (Ghost_Direction[i]) {
 		case NONE:
 			do {
@@ -242,8 +251,8 @@ void moveGhosts() {
 			break;
 		}
 
-		// Test if Pacman is moving
-		if(!moving[i]) {
+		// Test if the ghost is moving
+		if(!ghostMoving[i]) {
 
 			// Find the next cell to reach
 			switch (Ghost_Direction[i]) {
@@ -281,7 +290,7 @@ void moveGhosts() {
 			}
 
 			currentDirection[i] = Ghost_Direction[i];
-			moving[i] = true;
+			ghostMoving[i] = true;
 		}
 		else {
 			// Move the ghost of Ghost_PosInc in the correct direction
@@ -290,23 +299,23 @@ void moveGhosts() {
 				// Nothing to do
 				break;
 			case FORWARD:
-				Ghost_Position[i].z -= Ghost_PosInc[i];
+				Ghost_Position[i].z -= Ghost_PosInc;
 				break;
 			case BACKWARD:
-				Ghost_Position[i].z += Ghost_PosInc[i];
+				Ghost_Position[i].z += Ghost_PosInc;
 				break;
 			case LEFT:
-				Ghost_Position[i].x -= Ghost_PosInc[i];
+				Ghost_Position[i].x -= Ghost_PosInc;
 				break;
 			case RIGHT:
-				Ghost_Position[i].x += Ghost_PosInc[i];
+				Ghost_Position[i].x += Ghost_PosInc;
 				break;
 			}
 
 			// If the next position is reach Pacman is stopped and we check
 			// if there is some action to do (take a coin for example)
 			if(onCellCenter(Ghost_Position[i], nextPosition[i])) {
-				moving[i] = false;
+				ghostMoving[i] = false;
 				//checkCellAction(nextPosition[i]);
 			}
 		}
@@ -365,6 +374,7 @@ void renderGame() {
  * @retval None
  */
 void checkCellAction(gridPosition grid) {
+
 	switch(GameBoard[grid.z][grid.x]) {
 	case EMPTY:
 		break;
@@ -372,24 +382,41 @@ void checkCellAction(gridPosition grid) {
 	case COIN:
 		GameBoard[grid.z][grid.x] = EMPTY;
 		score += COIN_POINTS;
+		coinsLeft--;
+		printf("coins : %d\n",coinsLeft);
+
 		break;
 
 	case BIGCOIN:
 		GameBoard[grid.z][grid.x] = EMPTY;
 		score += BIGCOIN_POINTS;
+		hunted = false;
+		startCombo(COMBO_TIME);
 		break;
 	default:
 		break;
 	}
+
+	if(coinsLeft == 0)
+		levelUp();
+
 }
 
 /**
- * @brief  Displays the score on the screen
+ * @brief  Displays the HUD (score, lives) on the screen
  * @param  None
  * @retval None
  */
-void displayScore() {
-	char textScore[50];
+void displayHUD() {
+	char textScore[20];
+	char textLives[5];
+	char textLevel[5];
+	char textCombo[3];
+
+	sprintf(textScore,"%d",score);		// Put the score into a string
+	sprintf(textLives,"%d",lives);		// Put the lives number into a string
+	sprintf(textLevel,"%d",level);		// Put the level number into a string
+
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -401,25 +428,63 @@ void displayScore() {
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-		sprintf(textScore,"%d",score);
-
 		glEnable(GL_COLOR_MATERIAL);
 
 		glPushMatrix();
 
-			glColor3f(10,10,10);
-			glTranslatef(0.8, 0.9, 0);
-			glScalef(0.1,0.1,0.1);
+			glColor3f(10,10,10);			// Bright white text
+			glTranslatef(0.8, 0.9, 0);		// Move to the top right hand corner
+			glScalef(0.08,0.1,0.1);			// Scale down the text
 
-			//glRotatef(-camAngle, 1, 0, 0);
+			t3dDraw2D("Score", 0, 0, 0);	// Put some decorative text
 
-
-			t3dDraw2D("Score", 0, 0, 0);
-
-			glTranslatef(0, -1.5, 0);
-			t3dDraw2D(textScore, 0, 0, 0);
+			glTranslatef(0, -1.5, 0);		// Translate the score under the previous text
+			t3dDraw2D(textScore, 0, 0, 0);	// Draw the score
 
 		glPopMatrix();
+
+		glPushMatrix();
+
+			glColor3f(10,10,10);			// Bright white text
+			glTranslatef(0.5, 0.9, 0);		// Move to the top right hand corner, before the score
+			glScalef(0.08,0.1,0.1);			// Scale down the text
+
+			t3dDraw2D("Lives", 0, 0, 0);	// Put some decorative text
+
+			glTranslatef(0, -1.5, 0);		// Translate the lives number under the previous text
+			t3dDraw2D(textLives, 0, 0, 0);	// Draw the lives number
+
+		glPopMatrix();
+
+		glPushMatrix();
+
+			glColor3f(10,10,10);			// Bright white text
+			glTranslatef(-0.8, 0.9, 0);		// Move to the top left hand corner
+			glScalef(0.08,0.1,0.1);			// Scale down the text
+
+			t3dDraw2D("Level", 0, 0, 0);	// Put some decorative text
+
+			glTranslatef(0, -1.5, 0);		// Translate the level number under the previous text
+			t3dDraw2D(textLevel, 0, 0, 0);	// Draw the level number
+
+		glPopMatrix();
+
+		if(comboTimeRemaining > 0) {
+			sprintf(textCombo,"%ds",comboTimeRemaining);		// Put the combo remaining time into a string
+
+			glPushMatrix();
+
+				glColor3f(10,10,10);			// Bright white text
+				glTranslatef(0.15, 0.9, 0);		// Move to the top right hand corner, before the lives
+				glScalef(0.08,0.1,0.1);			// Scale down the text
+
+				t3dDraw2D("Combo", 0, 0, 0);	// Put some decorative text
+
+				glTranslatef(0, -1.5, 0);		// Translate the lives number under the previous text
+				t3dDraw2D(textCombo, 0, 0, 0);	// Draw the lives number
+
+			glPopMatrix();
+		}
 
 		glDisable(GL_COLOR_MATERIAL);
 
@@ -427,8 +492,6 @@ void displayScore() {
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
-
-
 
 }
 
@@ -439,4 +502,201 @@ void displayScore() {
   */
 gridPosition getNextPosition() {
 	return nextPosition;
+}
+
+/**
+  * @brief  Moves Pacman and the ghosts to their original positions
+  * @param  None
+  * @retval None
+  */
+void resetPositions() {
+	ghostInit = true;
+
+	for(int i=0; i<GHOST_COUNT; i++)
+		sendGhostHome(i);
+
+	sendPacmanHome();
+}
+
+/**
+  * @brief  Reset the game to its original state
+  * @param  None
+  * @retval None
+  */
+void gameOver() {
+	score = 0;
+	lives = MAX_LIVES;
+	ghostInit = true;
+	startCombo(0);
+
+	gameBoardInit();
+
+	sendPacmanHome();
+
+	for(int i=0; i<GHOST_COUNT; i++)
+		sendGhostHome(i);
+}
+
+/**
+  * @brief  Moves Pacman to its original position
+  * @param  The ghost number
+  * @retval None
+  */
+void sendPacmanHome() {
+	float cellWidth = 2.0f * GameBaseSize.x / (float) N_CELLS_W;
+	gridPosition grid ={14,23};
+
+	point home = gridToPos(grid);
+
+	home.x -= cellWidth/2.0;
+
+	PAC_Position = home;
+	PAC_Direction = NONE;
+	PacmanMoving = false;
+
+}
+
+/**
+  * @brief  Moves the specified ghost to its original position
+  * @param  The ghost number
+  * @retval None
+  */
+void sendGhostHome(int ghostNum) {
+	gridPosition grid = {12 + ghostNum, 14};
+	point home = gridToPos(grid);
+
+	Ghost_Position[ghostNum] = home;
+	ghostHome[ghostNum] = true;
+
+	if(ghostInit)
+		glutTimerFunc(ghostNum*1000, sendGhostBoard, ghostNum);
+	else
+		glutTimerFunc(5000, sendGhostBoard, ghostNum);
+
+	if(ghostNum == GHOST_COUNT-1)
+		ghostInit = false;
+}
+
+/**
+  * @brief  Moves the specifed ghost out its home
+  * @param  The ghost number
+  * @retval None
+  */
+void sendGhostBoard(int ghostNum) {
+	gridPosition grid ={12 + ghostNum,11};
+	point home = gridToPos(grid);
+
+	Ghost_Position[ghostNum] = home;
+	Ghost_Direction[ghostNum] = NONE;
+	ghostMoving[ghostNum] = false;
+	ghostHome[ghostNum] = false;
+}
+
+/**
+  * @brief  Starts the combo period and updates the comboValue
+  * @param  None
+  * @retval None
+  */
+void startCombo(int value) {
+	static int 	lastValue = COMBO_TIME+1;
+	static bool quitNext = false;
+
+	// if quitNext is set that means the the combo timer should be restarted
+	// and so the previous timer has to end
+	if(quitNext)  {
+		quitNext = false;
+		return;
+	}
+
+	// Detect if the timer is restarted to its original value
+	if(value != lastValue-1)
+		quitNext = true;
+
+	lastValue = value;
+
+	// Store the number of seconds remaining for the HUD
+	comboTimeRemaining = value;
+
+	// The combo period is started, Pacman is hunting!
+	if(value == COMBO_TIME) {
+		hunted = false;
+	}
+
+	// The combo period is ended
+	else if(value == 0) {
+		comboValue = 200;
+		hunted = true;
+		lastValue = COMBO_TIME+1;
+	}
+
+	// Some time left, calling startCombo in 1s with the remaining time
+	if(value > 0) {
+		glutTimerFunc(1000, startCombo, value-1);
+	}
+
+}
+
+/**
+  * @brief  Tests if Pacman hits a ghost and does the necessary actions
+  * @param  None
+  * @retval None
+  */
+void checkGhosts() {
+	bool ghostTouched = false;
+	int  ghostNum;
+
+	for(int i=0; i<GHOST_COUNT; i++) {
+		gridPosition ghostPos;
+		ghostPos = locateOnGrid(Ghost_Position[i]);
+
+		if(fabs(PAC_Position.x - Ghost_Position[i].x) < (PAC_RADIUS + GHOST_SCALE)/2.0 && fabs(PAC_Position.z - Ghost_Position[i].z) < (PAC_RADIUS + GHOST_SCALE)/2.0) {
+			ghostTouched = true;
+			ghostNum = i;
+		}
+	}
+
+	if(ghostTouched) {
+		if(hunted) {
+			lives--;
+			if(lives == 0)
+				gameOver();
+
+			resetPositions();
+		}
+		else {
+			sendGhostHome(ghostNum);
+			score += comboValue;
+			comboValue *= 2;
+		}
+	}
+}
+
+/**
+  * @brief  Intialize the content of GameBoard with GameBoardInit
+  * @param  None
+  * @retval None
+  */
+void gameBoardInit() {
+	for(int zcell=0; zcell<N_CELLS_H; zcell++) {
+		for(int xcell=0; xcell<N_CELLS_W; xcell++) {
+			GameBoard[zcell][xcell] = GameBoardInit[zcell][xcell];
+
+			if(GameBoard[zcell][xcell] == COIN)
+				coinsLeft++;
+		}
+	}
+}
+
+/**
+  * @brief  Performs the necessary action for a level up
+  * @param  None
+  * @retval None
+  */
+void levelUp() {
+	gameBoardInit();
+	resetPositions();
+	level++;
+
+	if(ghostSpeed > 1)
+		ghostSpeed -= 2;
 }
