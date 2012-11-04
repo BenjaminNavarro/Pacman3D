@@ -383,8 +383,6 @@ void checkCellAction(gridPosition grid) {
 		GameBoard[grid.z][grid.x] = EMPTY;
 		score += COIN_POINTS;
 		coinsLeft--;
-		printf("coins : %d\n",coinsLeft);
-
 		break;
 
 	case BIGCOIN:

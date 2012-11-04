@@ -132,9 +132,6 @@ void drawScene() {
 	// Display the HUD on the screen
 	displayHUD();
 
-	// Check if Pacman is touching a ghost
-	checkGhosts();
-
 	glutSwapBuffers();
 }
 
@@ -225,7 +222,6 @@ void initRendering() {
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
 	gameBoardInit();
 
@@ -280,6 +276,9 @@ void PAC_Update(int value) {
 	}
 
 	movePacman(newDirection);
+
+	// Check if Pacman is touching a ghost
+	checkGhosts();
 
 	glutTimerFunc(speed, PAC_Update, 0);
 }
