@@ -9,7 +9,7 @@
 // OpenGL / GLUT libraries
 #include "OpenGLHeader.h"
 
-#include "imageloader.h"
+#include "images/imageloader.h"
 
 /***				Prototypes				***/
 GLuint 	loadTexture(Image* image);

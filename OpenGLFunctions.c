@@ -7,6 +7,7 @@ GLMmodel*		Ghost[GHOST_COUNT];					// array of the different ghosts models
 GLuint			floorTex;							// handle for the floor texture
 float 			camAngle = 45.0f;
 direction 		newDirection = NONE;
+direction		ghostPreviousDirection[GHOST_COUNT] = {NONE};
 
 
 
@@ -97,14 +98,22 @@ void drawScene() {
 	glPopMatrix();
 
 	for(int i=0; i<GHOST_COUNT; i++) {
+		direction dir;
 
 		glPushMatrix();
-
 
 		glTranslatef(Ghost_Position[i].x, GHOST_SCALE + Ghost_Position[i].y, Ghost_Position[i].z);
 		glScalef(GHOST_SCALE,GHOST_SCALE,GHOST_SCALE);
 
-		switch (Ghost_Direction[i]) {
+		if(Ghost_Direction[i] != NONE) {
+			dir = Ghost_Direction[i];
+			ghostPreviousDirection[i] = dir;
+		}
+		else {
+			dir = ghostPreviousDirection[i];
+		}
+
+		switch (dir) {
 		case NONE:
 			// Nothing to do
 			break;

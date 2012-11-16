@@ -11,7 +11,7 @@
 // OpenGL / GLUT libraries
 #include "OpenGLHeader.h"
 
-#include "imageloader.h"
+#include "images/imageloader.h"
 #include "objImport/glm.h"
 #include "objImport/gltb.h"
 #include "objImport/dirent32.h"

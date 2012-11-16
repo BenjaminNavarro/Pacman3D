@@ -49,6 +49,6 @@ void			removeFruit();
 void			initMoves();
 void			addMove(gridPosition pos, direction newDirection);
 void			clearMoves();
-bool 			PacmanInSight(gridPosition grid);
+bool 			PacmanInSight(int ghostNum);
 
 #endif /* GAMEFUNCTIONS_H_ */
