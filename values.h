@@ -45,6 +45,28 @@ typedef enum {
 	GHOSTOUT
 } cellType;
 
+typedef enum {
+	Cherry,
+	Strawberry,
+	Orange,
+	Apple,
+	Grape,
+	IceCompot,
+	StewedFruit,
+	Key
+} fruits;
+
+typedef struct move {
+	gridPosition position;
+	direction dir;
+	struct move* next;
+} move;
+
+typedef struct {
+	int numMoves;
+	move* moves;
+} lastMoves;
+
 typedef unsigned char bool;
 
 enum {
@@ -84,7 +106,9 @@ extern		int				lives;				// Number of lives remaining
 extern		int				comboValue;			// Holds the last combo value
 extern		int				comboTimeRemaining;	// Seconds to the end of combo period
 extern		bool			ghostInit;			// True if the ghosts are sent to home for the first time
-extern		int				coinsLeft;			// Holds the the number of remaining coins to catch
+extern		int				coinsLeft;			// Holds the number of remaining coins to catch
+extern 		int				coinsPicked;		// Holds the number of picked up coins
+extern 		gridPosition	fruitPosition;		// Stores where the fruits appear
 
 #define		MAX_LIVES		3
 #define		COMBO_TIME		8
@@ -101,6 +125,9 @@ extern		int				coinsLeft;			// Holds the the number of remaining coins to catch
 #define		OBJECTS_HEIGHT	0.06
 #define		COIN_RADIUS		0.01
 #define		BIGCOIN_RADIUS	0.05
+
+#define		isFruitCoin(x)	(x == 70 ? true : x == 170 ? true : false)
+#define		FRUIT_COUNT		8
 
 extern		cellType		GameBoardInit[N_CELLS_H][N_CELLS_W];
 extern		cellType		GameBoard[N_CELLS_H][N_CELLS_W];

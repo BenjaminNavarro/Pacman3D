@@ -10,8 +10,11 @@
 gridPosition	nextPosition = {14,17};				// Next Pacman position
 bool 			ghostMoving[GHOST_COUNT] = {false};	// Tells if the ghost is moving or not
 bool 			PacmanMoving = false;				// Tells if Pacman is moving or not
-bool			ghostHome[GHOST_COUNT] = {false};
-
+bool			ghostHome[GHOST_COUNT] = {false};	// Tells if the ghost is in da house
+bool			followMode[GHOST_COUNT] = {false};	// True is the ghost is following pacman
+GLMmodel*		fruitsModels[FRUIT_COUNT];
+GLMmodel* 		fruitModel;
+lastMoves		PacmanMoves;
 
 /**
  * @brief  Finds the grid's cell corresponding to the given position
@@ -88,6 +91,7 @@ bool onCellCenter(point position, gridPosition cell) {
 void movePacman(direction dir) {
 	static gridPosition	currentPosition;
 	static direction	currentDirection = NONE;
+	static direction	previousDirection = NONE;
 
 	// Locate Pacman on the grid
 	currentPosition = locateOnGrid(PAC_Position);
@@ -158,6 +162,14 @@ void movePacman(direction dir) {
 
 		currentDirection = dir;
 		PacmanMoving = true;
+
+		if(previousDirection != currentDirection) {	// Pacman's direction changed
+			if(PacmanMoves.numMoves < level) {
+				addMove(nextPosition,currentDirection);
+			}
+
+			previousDirection = currentDirection;
+		}
 	}
 	else {
 		// Move Pacman of PAC_PosInc in the correct direction
@@ -211,8 +223,8 @@ void moveGhosts() {
 		currentPosition[i] = locateOnGrid(Ghost_Position[i]);
 
 		// Test if the next cell is a correct one, if it's not the ghost is sent to a random direction
-		switch (Ghost_Direction[i]) {
-		case NONE:
+
+		if(Ghost_Direction[i] == NONE) {
 			do {
 				r = (float) rand() / (float) RAND_MAX;
 				if(r < 0.25)
@@ -224,6 +236,10 @@ void moveGhosts() {
 				else
 					Ghost_Direction[i] = RIGHT;
 			} while( Ghost_Direction[i] == previousDirection[i]);
+		}
+
+		switch (Ghost_Direction[i]) {
+		case NONE:
 			break;
 		case FORWARD:
 			if(GameBoard[currentPosition[i].z - 1][currentPosition[i].x] == WALL) {
@@ -316,7 +332,7 @@ void moveGhosts() {
 			// if there is some action to do (take a coin for example)
 			if(onCellCenter(Ghost_Position[i], nextPosition[i])) {
 				ghostMoving[i] = false;
-				//checkCellAction(nextPosition[i]);
+				PacmanInSight(locateOnGrid(Ghost_Position[i]));
 			}
 		}
 
@@ -359,6 +375,14 @@ void renderGame() {
 				glutSolidSphere(BIGCOIN_RADIUS , 16 , 16 );
 				glPopMatrix();
 				break;
+
+			case FRUIT:
+				glPushMatrix();
+					glTranslatef(position.x, OBJECTS_HEIGHT, position.z);
+					//glmDraw(fruitModel, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+					glutSolidSphere(0.05,8,8);
+				glPopMatrix();
+				break;
 			default:
 				break;
 			}
@@ -383,6 +407,10 @@ void checkCellAction(gridPosition grid) {
 		GameBoard[grid.z][grid.x] = EMPTY;
 		score += COIN_POINTS;
 		coinsLeft--;
+		coinsPicked++;
+
+		if(isFruitCoin(coinsPicked))
+			addFruit();
 		break;
 
 	case BIGCOIN:
@@ -391,12 +419,57 @@ void checkCellAction(gridPosition grid) {
 		hunted = false;
 		startCombo(COMBO_TIME);
 		break;
+
+	case FRUIT:
+		switch(level) {
+		case 1:
+			score += 100;
+			break;
+		case 2:
+			score += 200;
+			break;
+		case 3:
+			// fall-throught
+		case 4:
+			score += 500;
+			break;
+		case 5:
+			// fall-throught
+		case 6:
+			score += 700;
+			break;
+		case 7:
+			// fall-throught
+		case 8:
+			score += 1000;
+			break;
+		case 9:
+			// fall-throught
+		case 10:
+			score += 2000;
+			break;
+		case 11:
+			// fall-throught
+		case 12:
+			score += 3000;
+			break;
+		default:
+			score += 5000;
+			break;
+		}
+
+		removeFruit();
+		break;
 	default:
 		break;
 	}
 
 	if(coinsLeft == 0)
 		levelUp();
+
+
+
+
 
 }
 
@@ -526,6 +599,7 @@ void gameOver() {
 	lives = MAX_LIVES;
 	ghostInit = true;
 	startCombo(0);
+	coinsPicked = 0;
 
 	gameBoardInit();
 
@@ -694,7 +768,180 @@ void levelUp() {
 	gameBoardInit();
 	resetPositions();
 	level++;
+	coinsPicked = 0;
 
 	if(ghostSpeed > 1)
 		ghostSpeed -= 2;
+}
+
+/**
+  * @brief  Add a fruit on the board depending on the level
+  * @param  None
+  * @retval None
+  */
+void addFruit() {
+	float TTL = 5000.0 + 5000.0 * (float)rand()/(float)RAND_MAX;	// The fruit stays between 5s and 10s
+
+	if(level > 13 && coinsPicked > 70)	// Only one key per level for levels > 13
+		return;
+
+	switch(level) {
+	case 1:
+		fruitModel = fruitsModels[Cherry];
+		break;
+	case 2:
+		fruitModel = fruitsModels[Strawberry];
+		break;
+	case 3:
+		// fall-throught
+	case 4:
+		fruitModel = fruitsModels[Orange];
+		break;
+	case 5:
+		// fall-throught
+	case 6:
+		fruitModel = fruitsModels[Apple];
+		break;
+	case 7:
+		// fall-throught
+	case 8:
+		fruitModel = fruitsModels[Grape];
+		break;
+	case 9:
+		// fall-throught
+	case 10:
+		fruitModel = fruitsModels[IceCompot];
+		break;
+	case 11:
+		// fall-throught
+	case 12:
+		fruitModel = fruitsModels[StewedFruit];
+		break;
+	default:
+		fruitModel = fruitsModels[Key];
+		break;
+	}
+
+	GameBoard[fruitPosition.z][fruitPosition.x] |= FRUIT;
+
+	glutTimerFunc((int)TTL, removeFruit, 0);
+}
+
+/**
+  * @brief  Removes the fruit from the game board
+  * @param  None
+  * @retval None
+  */
+void removeFruit() {
+	GameBoard[fruitPosition.z][fruitPosition.x] &= ~FRUIT;
+}
+
+/**
+  * @brief  Init the Pacman's moves list
+  * @param  None
+  * @retval None
+  */
+void initMoves() {
+	PacmanMoves.numMoves = 0;
+	PacmanMoves.moves = NULL;
+}
+
+/**
+  * @brief  Add a move to the Pacman's moves list
+  * @param  pos : Position where the move occured
+  * #param	newDirection : the direction Pacman took
+  * @retval None
+  */
+void addMove(gridPosition pos, direction newDirection) {
+	move* newMove;
+
+	newMove = (move*) malloc(sizeof(move));
+
+	if(newMove == NULL) {
+		printf("Memory allocation failure\n");
+		exit(0);
+	}
+
+	newMove->dir 		= newDirection;
+	newMove->position	 = pos;
+	newMove->next 		= NULL;
+
+	if(PacmanMoves.numMoves == 0) {
+		PacmanMoves.moves = newMove;
+	}
+	else {
+		move* new = PacmanMoves.moves;
+		for(int i=0; i<PacmanMoves.numMoves - 1; i++)
+			new = new->next;
+
+		new->next = newMove;
+	}
+
+	PacmanMoves.numMoves++;
+}
+
+/**
+  * @brief  Clear the Pacman's moves list
+  * @param  None
+  * @retval None
+  */
+void clearMoves() {
+	move* pt = PacmanMoves.moves;
+	move* toDelete;
+
+	while(pt != NULL) {
+		toDelete = pt;
+		pt = pt->next;
+		free(toDelete);
+	}
+
+	PacmanMoves.moves = NULL;
+	PacmanMoves.numMoves = 0;
+}
+
+bool PacmanInSight(gridPosition grid) {
+	direction dir = FORWARD;
+	gridPosition currentPos,PacmanPos = locateOnGrid(PAC_Position);
+	int xinc, zinc;
+
+	for(int i=0; i<4; i++) {	// Test all directions
+		switch(dir) {
+		case FORWARD:
+			zinc = -1;
+			xinc = 0;
+			dir = BACKWARD;
+			break;
+		case BACKWARD:
+			zinc = 1;
+			xinc = 0;
+			dir = LEFT;
+			break;
+		case LEFT:
+			zinc = 0;
+			xinc = -1;
+			dir = RIGHT;
+			break;
+		case RIGHT:
+			zinc = 0;
+			xinc = 1;
+			break;
+		default:
+			break;
+		}
+
+		currentPos.x = grid.x;
+		currentPos.z = grid.z;
+
+		do {
+			currentPos.x += xinc;
+			currentPos.z += zinc;
+			if(currentPos.x == PacmanPos.x && currentPos.z == PacmanPos.z) {
+				printf("Saw it!!!\n");
+				return true;
+			}
+		} while(GameBoard[currentPos.z][currentPos.x] != WALL);
+
+	}
+
+	return false;
 }

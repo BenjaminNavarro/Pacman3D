@@ -44,5 +44,11 @@ void			startCombo(int value);
 void 			checkGhosts();
 void			gameBoardInit();
 void			levelUp();
+void			addFruit();
+void			removeFruit();
+void			initMoves();
+void			addMove(gridPosition pos, direction newDirection);
+void			clearMoves();
+bool 			PacmanInSight(gridPosition grid);
 
 #endif /* GAMEFUNCTIONS_H_ */

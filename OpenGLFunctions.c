@@ -128,7 +128,6 @@ void drawScene() {
 
 	}
 
-
 	// Display the HUD on the screen
 	displayHUD();
 
@@ -213,7 +212,7 @@ void handleKeyup(unsigned char key, int x, int y) {
 	}
 }
 
-//Initializes 3D rendering
+//Initializes 3D renderingy
 void initRendering() {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND); //Enable alpha blending
@@ -224,6 +223,7 @@ void initRendering() {
 	glEnable(GL_LIGHT0);
 
 	gameBoardInit();
+	initMoves();
 
 	Image* floor = loadBMP("images/floor.bmp");
 	floorTex = loadTexture(floor);
@@ -233,7 +233,6 @@ void initRendering() {
 	t3dInit();
 
 	srand(time(NULL));
-
 }
 
 //Called when the window is resized, forces the game dimmension to SCREEN_WIDTH and SCREEN_HEIGHT
@@ -319,5 +318,5 @@ void Ghost_Update(int value) {
 void refresh() {
 	glutPostRedisplay();
 
-	glutTimerFunc(20, refresh, 0);
+	glutTimerFunc(40, refresh, 0);
 }
