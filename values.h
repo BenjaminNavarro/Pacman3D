@@ -29,11 +29,11 @@ typedef struct {
 } gridPosition;
 
 typedef enum {
-	NONE		=0,
-	FORWARD		=1,
-	BACKWARD	=2,
-	LEFT		=4,
-	RIGHT		=8
+	NONE		,
+	FORWARD		,
+	BACKWARD	,
+	LEFT		,
+	RIGHT
 } direction;
 
 typedef enum {
@@ -41,8 +41,7 @@ typedef enum {
 	COIN,
 	BIGCOIN,
 	FRUIT,
-	WALL,
-	GHOSTOUT
+	WALL
 } cellType;
 
 typedef enum {
@@ -74,6 +73,31 @@ enum {
 	true
 };
 
+typedef struct {
+	gridPosition 	currentPosition;
+	gridPosition 	nextPosition;
+	gridPosition	cellToReach;
+	point			position;
+	direction 		previousDirection;
+	direction 		currentDirection;
+	direction 		nextDirection;
+	direction		lastPacmanDirection;
+	bool			moving;
+	bool			atHome;
+	bool			followMode;
+	lastMoves		PacmanMoves;
+} ghost;
+
+typedef struct {
+	gridPosition 	currentPosition;
+	gridPosition 	nextPosition;
+	point			position;
+	direction 		previousDirection;
+	direction 		currentDirection;
+	direction 		nextDirection;
+	bool			moving;
+} pac;
+
 #define 	setVect3(vec, xv , yv , zv) 	vec.x = xv; vec.y = yv; vec.z = zv;
 
 /***				Pacman related values				***/
@@ -81,18 +105,13 @@ enum {
 
 #define		PAC_ANIM_FRAMES	10
 
-extern 		direction 		PAC_Direction;		// The direction where pacman should go
-extern 		point			PAC_Position;		// The position of pacman in the level
 extern 		float 			PAC_PosInc;			// At each timer update, pacman moves to PAC_PosInc in PAC_Direction
 
 /***				Ghosts related values				***/
 #define		GHOST_SCALE		0.10
 #define 	GHOST_COUNT		4
 
-extern		direction		Ghost_Direction[GHOST_COUNT];
-extern		point			Ghost_Position[GHOST_COUNT];
 extern		float			Ghost_PosInc;
-
 
 /***				General values						***/
 extern		point			GameBaseSize;

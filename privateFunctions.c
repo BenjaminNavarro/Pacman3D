@@ -41,3 +41,11 @@ void glColorRGBAlpha(unsigned char r, unsigned char g, unsigned char b, float al
 float degToRad(float angle) {
 	return (angle * M_PI / 180.0);
 }
+
+void assert_failed(unsigned char* file, unsigned int line) {
+	char c;
+	printf("Assertion failed\nFile : %s\nLine : %d\n\n",file,line);
+	getchar();
+	scanf("%c",&c);
+	exit(EXIT_FAILURE);
+}

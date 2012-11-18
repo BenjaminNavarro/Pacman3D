@@ -24,7 +24,7 @@
 
 
 /***				Defines						***/
-#define SHOW_GRID		0
+#define SHOW_GRID		1
 
 /***				Prototypes					***/
 void drawScene();

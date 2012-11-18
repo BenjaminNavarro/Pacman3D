@@ -35,11 +35,6 @@ int main(int argc, char** argv) {
 	glutKeyboardUpFunc(handleKeyup);
 	glutReshapeFunc(handleResize);
 	
-	glutTimerFunc(speed, PAC_Update, 0); 				//Add the Pacman timer
-	glutTimerFunc(animationSpeed, PAC_Animation, 0); 	//Add the Pacman animation timer
-	glutTimerFunc(ghostSpeed, Ghost_Update, 0); 		//Add the ghosts timer
-	glutTimerFunc(20, refresh, 0);						//Add the screen refresh timer
-	
 	glutMainLoop();
 	return 0;
 }

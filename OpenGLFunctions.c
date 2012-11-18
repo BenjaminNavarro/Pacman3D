@@ -5,9 +5,11 @@ GLMmodel*  		PacmanModel;						// glm model data structure for pacman
 GLMmodel*		PacmanAnimation[PAC_ANIM_FRAMES];	// array of the different pacman models
 GLMmodel*		Ghost[GHOST_COUNT];					// array of the different ghosts models
 GLuint			floorTex;							// handle for the floor texture
-float 			camAngle = 45.0f;
+float 			camAngle = 90.0f;
 direction 		newDirection = NONE;
-direction		ghostPreviousDirection[GHOST_COUNT] = {NONE};
+
+extern ghost	ghosts[GHOST_COUNT];
+extern pac		Pacman;
 
 
 
@@ -19,10 +21,16 @@ void drawScene() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	// translate the camera to follow pacman
-	// Projection of pacman's z coordinate on the y and z axes depending on the camera angle
-	glTranslatef(-PAC_Position.x, PAC_Position.z*sin(degToRad(camAngle)), -2.0f - PAC_Position.z*cos(degToRad(camAngle)));
-	glRotatef(camAngle,1,0,0);
+	if(camAngle != 90.0) {
+		// translate the camera to follow pacman
+		// Projection of pacman's z coordinate on the y and z axes depending on the camera angle
+		glTranslatef(-Pacman.position.x, Pacman.position.z*sin(degToRad(camAngle)), -2.0f - Pacman.position.z*cos(degToRad(camAngle)));
+		glRotatef(camAngle,1,0,0);
+	}
+	else {
+		glTranslatef(0, 0, -6);
+		glRotatef(camAngle,1,0,0);
+	}
 
 	// Enable the use of 2D textures
 	glEnable(GL_TEXTURE_2D);
@@ -72,7 +80,7 @@ void drawScene() {
 
 	glPushMatrix();
 
-		glTranslatef(PAC_Position.x, PAC_RADIUS + PAC_Position.y, PAC_Position.z);
+		glTranslatef(Pacman.position.x, PAC_RADIUS + Pacman.position.y, Pacman.position.z);
 		glScalef(PAC_RADIUS,PAC_RADIUS,PAC_RADIUS);
 
 		switch (newDirection) {
@@ -99,19 +107,15 @@ void drawScene() {
 
 	for(int i=0; i<GHOST_COUNT; i++) {
 		direction dir;
-
 		glPushMatrix();
 
-		glTranslatef(Ghost_Position[i].x, GHOST_SCALE + Ghost_Position[i].y, Ghost_Position[i].z);
+		glTranslatef(ghosts[i].position.x, GHOST_SCALE + ghosts[i].position.y, ghosts[i].position.z);
 		glScalef(GHOST_SCALE,GHOST_SCALE,GHOST_SCALE);
 
-		if(Ghost_Direction[i] != NONE) {
-			dir = Ghost_Direction[i];
-			ghostPreviousDirection[i] = dir;
-		}
-		else {
-			dir = ghostPreviousDirection[i];
-		}
+		if(ghosts[i].currentDirection == NONE)
+			dir = ghosts[i].previousDirection;
+		else
+			dir = ghosts[i].currentDirection;
 
 		switch (dir) {
 		case NONE:
@@ -186,22 +190,19 @@ void handleKeypress(unsigned char key, int x, int y) {
 		exit(0);
 		break;
 	case 'a':	// Stop (for testing purposes)
-		PAC_Direction = NONE;
+		Pacman.nextDirection = NONE;
 		break;
 	case 'z':	// Move forward
-		PAC_Direction = FORWARD;
+		Pacman.nextDirection = FORWARD;
 		break;
 	case 's':	// Move backward
-		PAC_Direction = BACKWARD;
+		Pacman.nextDirection = BACKWARD;
 		break;
 	case 'q':	// Move left
-		PAC_Direction = LEFT;
+		Pacman.nextDirection = LEFT;
 		break;
 	case 'd':	// Move right
-		PAC_Direction = RIGHT;
-		break;
-	case 'h':	// Move high
-		PAC_Position.y = PAC_RADIUS*2;
+		Pacman.nextDirection = RIGHT;
 		break;
 	case 'p':	// Move low
 		camAngle += 1;
@@ -216,7 +217,7 @@ void handleKeypress(unsigned char key, int x, int y) {
 void handleKeyup(unsigned char key, int x, int y) {
 	switch (key) {
 	case 'h':	// Move high
-		PAC_Position.y = 0;
+		Pacman.position.y = 0;
 		break;
 	}
 }
@@ -242,6 +243,11 @@ void initRendering() {
 	t3dInit();
 
 	srand(time(NULL));
+
+	glutTimerFunc(20, refresh, 0);						//Add the screen refresh timer
+	glutTimerFunc(speed, PAC_Update, 0); 				//Add the Pacman timer
+	glutTimerFunc(animationSpeed, PAC_Animation, 0); 	//Add the Pacman animation timer
+	glutTimerFunc(ghostSpeed, Ghost_Update, 0); 		//Add the ghosts timer
 }
 
 //Called when the window is resized, forces the game dimmension to SCREEN_WIDTH and SCREEN_HEIGHT
@@ -256,30 +262,30 @@ void PAC_Update(int value) {
 	static gridPosition	nextPosition;
 
 	// Locate Pacman on the grid
-	if(PAC_Direction != NONE)
-		nextPosition = getNextPosition();
+	if(Pacman.nextDirection != NONE)
+		nextPosition = Pacman.nextPosition;
 	else
-		nextPosition = locateOnGrid(PAC_Position);
+		nextPosition = locateOnGrid(Pacman.position);
 
-	switch (PAC_Direction) {
+	switch (Pacman.nextDirection) {
 		case NONE:
 			newDirection = NONE;
 			break;
 		case FORWARD:
 			if(GameBoard[nextPosition.z - 1][nextPosition.x] != WALL)
-				newDirection = PAC_Direction;
+				newDirection = Pacman.nextDirection;
 			break;
 		case BACKWARD:
 			if(GameBoard[nextPosition.z + 1][nextPosition.x] != WALL)
-				newDirection = PAC_Direction;
+				newDirection = Pacman.nextDirection;
 			break;
 		case LEFT:
 			if(GameBoard[nextPosition.z][nextPosition.x - 1] != WALL)
-				newDirection = PAC_Direction;
+				newDirection = Pacman.nextDirection;
 			break;
 		case RIGHT:
 			if(GameBoard[nextPosition.z][nextPosition.x + 1] != WALL)
-				newDirection = PAC_Direction;
+				newDirection = Pacman.nextDirection;
 			break;
 	}
 

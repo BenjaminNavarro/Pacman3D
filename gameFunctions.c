@@ -8,13 +8,12 @@
 #include "gameFunctions.h"
 
 gridPosition	nextPosition = {14,17};				// Next Pacman position
-bool 			ghostMoving[GHOST_COUNT] = {false};	// Tells if the ghost is moving or not
 bool 			PacmanMoving = false;				// Tells if Pacman is moving or not
-bool			ghostHome[GHOST_COUNT] = {false};	// Tells if the ghost is in da house
-bool			followMode[GHOST_COUNT] = {false};	// True is the ghost is following pacman
 GLMmodel*		fruitsModels[FRUIT_COUNT];
 GLMmodel* 		fruitModel;
-lastMoves		PacmanMoves;
+
+ghost			ghosts[GHOST_COUNT];
+pac				Pacman;
 
 /**
  * @brief  Finds the grid's cell corresponding to the given position
@@ -89,116 +88,109 @@ bool onCellCenter(point position, gridPosition cell) {
  * @retval None
  */
 void movePacman(direction dir) {
-	static gridPosition	currentPosition;
-	static direction	currentDirection = NONE;
-	static direction	previousDirection = NONE;
+	static int			movesDone[GHOST_COUNT] = {0};
+	static bool 		wait[GHOST_COUNT] = {false};
 
 	// Locate Pacman on the grid
-	currentPosition = locateOnGrid(PAC_Position);
+	Pacman.currentPosition = locateOnGrid(Pacman.position);
 
 	// Test if the next cell is a correct one, if it's not Pacman is stopped
 	switch (dir) {
 	case NONE:
-		currentDirection = NONE;
+		dir = NONE;
 		break;
 	case FORWARD:
-		if(GameBoard[currentPosition.z - 1][currentPosition.x] == WALL)
+		if(GameBoard[Pacman.currentPosition.z - 1][Pacman.currentPosition.x] == WALL)
 			dir = NONE;
 		break;
 	case BACKWARD:
-		if(GameBoard[currentPosition.z + 1][currentPosition.x] == WALL)
+		if(GameBoard[Pacman.currentPosition.z + 1][Pacman.currentPosition.x] == WALL)
 			dir = NONE;
 		break;
 	case LEFT:
-		if(GameBoard[currentPosition.z][currentPosition.x - 1] == WALL)
+		if(GameBoard[Pacman.currentPosition.z][Pacman.currentPosition.x - 1] == WALL)
 			dir = NONE;
 		break;
 	case RIGHT:
-		if(GameBoard[currentPosition.z][currentPosition.x + 1] == WALL)
+		if(GameBoard[Pacman.currentPosition.z][Pacman.currentPosition.x + 1] == WALL)
 			dir = NONE;
 		break;
 	}
 
 	// Test if Pacman is moving
-	if(!PacmanMoving) {
+	if(!Pacman.moving) {
 
 		// Find the next cell to reach
-		switch (dir) {
-		case NONE:
-			currentDirection = NONE;
-			nextPosition.x = currentPosition.x;
-			nextPosition.z = currentPosition.z;
+		if(dir == NONE) {
+			Pacman.currentDirection = NONE;
+			Pacman.nextPosition = Pacman.currentPosition;
 			return;
-			break;
-		case FORWARD:
-			nextPosition.x = currentPosition.x;
-			nextPosition.z = currentPosition.z - 1;
-			break;
-		case BACKWARD:
-			nextPosition.x = currentPosition.x;
-			nextPosition.z = currentPosition.z + 1;
-			break;
-		case LEFT:
-			nextPosition.x = currentPosition.x - 1;
-			nextPosition.z = currentPosition.z;
-			break;
-		case RIGHT:
-			nextPosition.x = currentPosition.x + 1;
-			nextPosition.z = currentPosition.z;
-			break;
 		}
 
+		Pacman.nextPosition = findNextCell(Pacman.currentPosition, dir);
+
 		// Left teleportation gate
-		if(nextPosition.x == 0) {
-			PAC_Position.x = GameBaseSize.x;
-			nextPosition.x = N_CELLS_W-2;
+		if(Pacman.nextPosition.x == 0) {
+			Pacman.position.x = GameBaseSize.x;
+			Pacman.nextPosition.x = N_CELLS_W-2;
 		}
 
 		// Right teleportation gate
-		if(nextPosition.x == N_CELLS_W-1) {
-			PAC_Position.x = -GameBaseSize.x;
-			nextPosition.x = 1;
+		if(Pacman.nextPosition.x == N_CELLS_W-1) {
+			Pacman.position.x = -GameBaseSize.x;
+			Pacman.nextPosition.x = 1;
 		}
 
-		currentDirection = dir;
-		PacmanMoving = true;
+		Pacman.currentDirection = dir;
+		Pacman.moving = true;
 
-		if(previousDirection != currentDirection) {	// Pacman's direction changed
-			if(PacmanMoves.numMoves < level) {
-				addMove(nextPosition,currentDirection);
+		if(Pacman.previousDirection != Pacman.currentDirection) {	// Pacman's direction changed
+			for(int i=0; i< GHOST_COUNT; i++) {
+				if(ghosts[i].followMode == true)
+					movesDone[i]++;
+
+				if((ghosts[i].PacmanMoves.numMoves <= level) && (ghosts[i].followMode == true) && (wait[i] == false)) {
+					addMove(i,Pacman.currentPosition,Pacman.currentDirection);
+				}
+				if(movesDone[i] >= level && !wait[i]) {
+					wait[i] = true;
+				}
+				if((ghosts[i].PacmanMoves.numMoves == 0) && wait[i]) {
+					wait[i] = false;
+					movesDone[i] = 0;
+				}
 			}
 
-			previousDirection = currentDirection;
+			Pacman.previousDirection = Pacman.currentDirection;
 		}
 	}
 	else {
 		// Move Pacman of PAC_PosInc in the correct direction
-		switch (currentDirection) {
+		switch (Pacman.currentDirection) {
 		case NONE:
 			// Nothing to do
 			break;
 		case FORWARD:
-			PAC_Position.z -= PAC_PosInc;
+			Pacman.position.z -= PAC_PosInc;
 			break;
 		case BACKWARD:
-			PAC_Position.z += PAC_PosInc;
+			Pacman.position.z += PAC_PosInc;
 			break;
 		case LEFT:
-			PAC_Position.x -= PAC_PosInc;
+			Pacman.position.x -= PAC_PosInc;
 			break;
 		case RIGHT:
-			PAC_Position.x += PAC_PosInc;
+			Pacman.position.x += PAC_PosInc;
 			break;
 		}
 
 		// If the next position is reach Pacman is stopped and we check
 		// if there is some action to do (take a coin for example)
-		if(onCellCenter(PAC_Position, nextPosition)) {
-			PacmanMoving = false;
-			checkCellAction(nextPosition);
+		if(onCellCenter(Pacman.position, Pacman.nextPosition)) {
+			Pacman.moving = false;
+			checkCellAction(Pacman.nextPosition);
 		}
 	}
-
 }
 
 /**
@@ -207,183 +199,262 @@ void movePacman(direction dir) {
  * @retval None
  */
 void moveGhosts() {
-	static 	gridPosition	currentPosition[GHOST_COUNT];
-	static 	gridPosition	nextPosition[GHOST_COUNT];
-	static 	direction		currentDirection[GHOST_COUNT] = {NONE};
-	static 	direction		previousDirection[GHOST_COUNT] = {NONE};
 	float 	r;
 	bool	test;
+	direction temp;
 
 
 	for(int i=0; i<GHOST_COUNT; i++) {
 
-		if(ghostHome[i])
+		if(ghosts[i].atHome)
 			continue;
 
+		assert(isValidPosition(ghosts[i].position));
+
 		// Locate the ghost on the grid
-		currentPosition[i] = locateOnGrid(Ghost_Position[i]);
+		ghosts[i].currentPosition = locateOnGrid(ghosts[i].position);
 
-		// The ghost is following Pacman
-		if(followMode[i] == true) {
+		assert(isValidCell(ghosts[i].currentPosition));
 
-		}
 		// The ghost moves randomly
-		else {
-			if(Ghost_Direction[i] == NONE) {
-				test = false;
+		if((ghosts[i].currentDirection == NONE) && (ghosts[i].followMode == false)) {
+			test = false;
 
-				switch(previousDirection[i]) {
-				case NONE:	// The ghost just went off the house
-					// fall-through
-				case FORWARD:
-					while(test == false) {
-						r = (float) rand() / (float) RAND_MAX;
+			//printf("prev dir %d : %d\n",i,ghosts[i].previousDirection);
 
-						if(r < 0.33 && (GameBoard[currentPosition[i].z][currentPosition[i].x - 1] != WALL)){
-							Ghost_Direction[i] = previousDirection[i] = LEFT;
-						}
-						else if(r < 0.66  && (GameBoard[currentPosition[i].z - 1][currentPosition[i].x] != WALL)) {
-							Ghost_Direction[i] = previousDirection[i] = FORWARD;
-						}
-						else if(r >= 0.66 && (GameBoard[currentPosition[i].z][currentPosition[i].x + 1] != WALL)) {
-							Ghost_Direction[i] = previousDirection[i] = RIGHT;
-						}
+			//assert(isOnWall(ghosts[i].currentPosition));
 
-						if(Ghost_Direction[i] != NONE)
-							test = true;
-					}
-					break;
-				case BACKWARD:
-					while(test == false) {
-						r = (float) rand() / (float) RAND_MAX;
+			switch(ghosts[i].previousDirection) {
 
-						if(r < 0.33 && (GameBoard[currentPosition[i].z][currentPosition[i].x - 1] != WALL)){
-							Ghost_Direction[i] = previousDirection[i] = LEFT;
-						}
-						else if(r < 0.66  && (GameBoard[currentPosition[i].z + 1][currentPosition[i].x] != WALL)) {
-							Ghost_Direction[i] = previousDirection[i] = BACKWARD;
-						}
-						else if(r >= 0.66 && (GameBoard[currentPosition[i].z][currentPosition[i].x + 1] != WALL)) {
-							Ghost_Direction[i] = previousDirection[i] = RIGHT;
-						}
-
-						if(Ghost_Direction[i] != NONE)
-							test = true;
-					}
-					break;
-				case LEFT:
-					while(test == false) {
-						r = (float) rand() / (float) RAND_MAX;
-
-						if(r < 0.33 && (GameBoard[currentPosition[i].z + 1][currentPosition[i].x] != WALL)){
-							Ghost_Direction[i] = previousDirection[i] = BACKWARD;
-						}
-						else if(r < 0.66  && (GameBoard[currentPosition[i].z - 1][currentPosition[i].x] != WALL)) {
-							Ghost_Direction[i] = previousDirection[i] = FORWARD;
-						}
-						else if(r >= 0.66 && (GameBoard[currentPosition[i].z][currentPosition[i].x - 1] != WALL)) {
-							Ghost_Direction[i] = previousDirection[i] = LEFT;
-						}
-
-						if(Ghost_Direction[i] != NONE)
-							test = true;
-					}
-					break;
-				case RIGHT:
-					while(test == false) {
-						r = (float) rand() / (float) RAND_MAX;
-
-						if(r < 0.33 && (GameBoard[currentPosition[i].z + 1][currentPosition[i].x] != WALL)){
-							Ghost_Direction[i] = previousDirection[i] = BACKWARD;
-						}
-						else if(r < 0.66  && (GameBoard[currentPosition[i].z - 1][currentPosition[i].x] != WALL)) {
-							Ghost_Direction[i] = previousDirection[i] = FORWARD;
-						}
-						else if(r >= 0.66 && (GameBoard[currentPosition[i].z][currentPosition[i].x + 1] != WALL)) {
-							Ghost_Direction[i] = previousDirection[i] = RIGHT;
-						}
-
-						if(Ghost_Direction[i] != NONE)
-							test = true;
-					}
-					break;
-				}
-			}
-
-		}
-		// Test if the ghost is moving
-		if(!ghostMoving[i]) {
-
-			// Find the next cell to reach
-			switch (Ghost_Direction[i]) {
 			case NONE:
-				return;
+				printf("Fuck off!!!!!!!\n");
+				exit(EXIT_FAILURE);
 				break;
 			case FORWARD:
-				nextPosition[i].x = currentPosition[i].x;
-				nextPosition[i].z = currentPosition[i].z - 1;
+				while(test == false) {
+					r = (float) rand() / (float) RAND_MAX;
+
+					if(!isOnWall(ghosts[i].currentPosition)) {
+						printf("%d entered a wall at (%d,%d) going in direction %d\n",i,ghosts[i].currentPosition.x,ghosts[i].currentPosition.z,ghosts[i].previousDirection);
+						sendGhostHome(i);
+					}
+
+					if(r < 0.33 && !wallOnLeft(ghosts[i].currentPosition)){
+						temp = LEFT;
+					}
+					else if(r < 0.66  && !wallOnTop(ghosts[i].currentPosition)) {
+						temp = FORWARD;
+					}
+					else if(r >= 0.66 && !wallOnRight(ghosts[i].currentPosition)) {
+						temp = RIGHT;
+					}
+
+					if(temp != NONE)
+						test = true;
+				}
 				break;
 			case BACKWARD:
-				nextPosition[i].x = currentPosition[i].x;
-				nextPosition[i].z = currentPosition[i].z + 1;
+				while(test == false) {
+					r = (float) rand() / (float) RAND_MAX;
+
+					if(!isOnWall(ghosts[i].currentPosition)) {
+						printf("%d entered a wall at (%d,%d) going in direction %d\n",i,ghosts[i].currentPosition.x,ghosts[i].currentPosition.z,ghosts[i].previousDirection);
+						sendGhostHome(i);
+					}
+
+					if(r < 0.33 && !wallOnLeft(ghosts[i].currentPosition)){
+						temp = LEFT;
+					}
+					else if(r < 0.66  && !wallOnBottom(ghosts[i].currentPosition)) {
+						temp = BACKWARD;
+					}
+					else if(r >= 0.66 && !wallOnRight(ghosts[i].currentPosition)) {
+						temp = RIGHT;
+					}
+
+					if(temp != NONE)
+						test = true;
+				}
 				break;
 			case LEFT:
-				nextPosition[i].x = currentPosition[i].x - 1;
-				nextPosition[i].z = currentPosition[i].z;
+				while(test == false) {
+					r = (float) rand() / (float) RAND_MAX;
+
+					if(!isOnWall(ghosts[i].currentPosition)) {
+						printf("%d entered a wall at (%d,%d) going in direction %d\n",i,ghosts[i].currentPosition.x,ghosts[i].currentPosition.z,ghosts[i].previousDirection);
+						sendGhostHome(i);
+					}
+
+					if(r < 0.33 && !wallOnBottom(ghosts[i].currentPosition)){
+						temp = BACKWARD;
+					}
+					else if(r < 0.66  && !wallOnTop(ghosts[i].currentPosition)) {
+						temp = FORWARD;
+					}
+					else if(r >= 0.66 && !wallOnLeft(ghosts[i].currentPosition)) {
+						temp = LEFT;
+					}
+
+					if(temp != NONE)
+						test = true;
+				}
 				break;
 			case RIGHT:
-				nextPosition[i].x = currentPosition[i].x + 1;
-				nextPosition[i].z = currentPosition[i].z;
+				while(test == false) {
+					r = (float) rand() / (float) RAND_MAX;
+
+					if(!isOnWall(ghosts[i].currentPosition)) {
+						printf("%d entered a wall at (%d,%d) going in direction %d\n",i,ghosts[i].currentPosition.x,ghosts[i].currentPosition.z,ghosts[i].previousDirection);
+						sendGhostHome(i);
+					}
+
+					if(r < 0.33 && !wallOnBottom(ghosts[i].currentPosition)){
+						temp = BACKWARD;
+					}
+					else if(r < 0.66  && !wallOnTop(ghosts[i].currentPosition)) {
+						temp = FORWARD;
+					}
+					else if(r >= 0.66 && !wallOnRight(ghosts[i].currentPosition)) {
+						temp = RIGHT;
+					}
+
+					if(temp != NONE)
+						test = true;
+				}
 				break;
 			}
 
+			ghosts[i].previousDirection = temp;
+			ghosts[i].currentDirection = temp;
+
+			if(ghosts[i].currentDirection == NONE)
+				continue;
+
+			// Find the next cell to reach
+			ghosts[i].nextPosition = findNextCell(ghosts[i].currentPosition, ghosts[i].currentDirection);
+
+			assert(isValidCell(ghosts[i].nextPosition));
+
+		}
+
+		// Test if the ghost is moving
+		if(!ghosts[i].moving) {
+
 			// Left teleportation gate
-			if(nextPosition[i].x == 0) {
-				Ghost_Position[i].x = GameBaseSize.x;
-				nextPosition[i].x = N_CELLS_W-2;
+			if(ghosts[i].nextPosition.x == 0) {
+				ghosts[i].position.x = GameBaseSize.x;
+				ghosts[i].nextPosition.x = N_CELLS_W-2;
 			}
 
 			// Right teleportation gate
-			if(nextPosition[i].x == N_CELLS_W-1) {
-				Ghost_Position[i].x = -GameBaseSize.x;
-				nextPosition[i].x = 1;
+			if(ghosts[i].nextPosition.x == N_CELLS_W-1) {
+				ghosts[i].position.x = -GameBaseSize.x;
+				ghosts[i].nextPosition.x = 1;
 			}
 
-			currentDirection[i] = Ghost_Direction[i];
-			ghostMoving[i] = true;
+			ghosts[i].moving = true;
 		}
 		else {
 			// Move the ghost of Ghost_PosInc in the correct direction
-			switch (currentDirection[i]) {
+			switch (ghosts[i].currentDirection) {
 			case NONE:
 				break;
 			case FORWARD:
-				Ghost_Position[i].z -= Ghost_PosInc;
+				ghosts[i].position.z -= Ghost_PosInc;
 				break;
 			case BACKWARD:
-				Ghost_Position[i].z += Ghost_PosInc;
+				ghosts[i].position.z += Ghost_PosInc;
 				break;
 			case LEFT:
-				Ghost_Position[i].x -= Ghost_PosInc;
+				ghosts[i].position.x -= Ghost_PosInc;
 				break;
 			case RIGHT:
-				Ghost_Position[i].x += Ghost_PosInc;
+				ghosts[i].position.x += Ghost_PosInc;
 				break;
 			}
+
+			if(!isValidPosition(ghosts[i].position))
+				sendGhostHome(i);
 
 			// If the next position is reach Pacman is stopped and we check
 			// if there is some action to do (take a coin for example)
-			if(onCellCenter(Ghost_Position[i], nextPosition[i])) {
-				ghostMoving[i] = false;
-				if(PacmanInSight(i)) {
-					followMode[i] = true;
+			if(onCellCenter(ghosts[i].position, ghosts[i].nextPosition)) {
+				ghosts[i].position = gridToPos(ghosts[i].currentPosition);
+				ghosts[i].moving = false;
+
+				test = PacmanInSight(i);
+
+				ghosts[i].currentDirection = ghosts[i].nextDirection;
+
+				if(test && (level > 1)) {
+
+					ghosts[i].followMode = true;
+					ghosts[i].cellToReach = locateOnGrid(Pacman.position);
+					ghosts[i].lastPacmanDirection = Pacman.currentDirection;
+					ghosts[i].currentDirection = ghosts[i].previousDirection;
+
+					ghosts[i].nextDirection = ghosts[i].previousDirection;
+
+					ghosts[i].nextPosition = findNextCell(ghosts[i].currentPosition, ghosts[i].previousDirection);
+
+					printf("%d is following you! Go to %d,%d\n",i,ghosts[i].cellToReach.x,ghosts[i].cellToReach.z);
+
+
+					clearMoves(i);
+
 				}
-				if(!followMode[i]) {
-					Ghost_Direction[i] = NONE;
+				else if(ghosts[i].followMode == true) {
+					// Reaching the last Pacman's position known
+					if(!onCellCenter(ghosts[i].position, ghosts[i].cellToReach)) {
+						ghosts[i].nextPosition = findNextCell(ghosts[i].currentPosition, ghosts[i].currentDirection);
+						ghosts[i].nextDirection = ghosts[i].currentDirection;
+						continue;
+					}
+					else {
+						if(ghosts[i].currentDirection == ghosts[i].lastPacmanDirection) {
+							if(ghosts[i].PacmanMoves.moves != NULL) {
+								ghosts[i].currentDirection = ghosts[i].PacmanMoves.moves->dir;
+								removeFirstMove(i);
+							}
+						}
+						else {
+							ghosts[i].currentDirection = ghosts[i].lastPacmanDirection;
+						}
+
+						ghosts[i].nextDirection = ghosts[i].currentDirection;
+
+						// No more recorded positions to reach, return in random mode
+						if(ghosts[i].PacmanMoves.numMoves == 0) {
+							ghosts[i].nextDirection = NONE;
+							//ghosts[i].previousDirection = ghosts[i].currentDirection;
+
+							ghosts[i].followMode = false;
+
+							printf("%d is no longer following you\n",i);
+
+							exit(EXIT_FAILURE);
+
+							// Find the next cell to reach
+							ghosts[i].nextPosition = findNextCell(ghosts[i].currentPosition, ghosts[i].currentDirection);
+
+							exit(EXIT_FAILURE);
+
+							if(isOnWall(ghosts[i].nextPosition)) {
+								ghosts[i].currentDirection = NONE;
+							}
+
+						}
+						else {
+							ghosts[i].cellToReach = ghosts[i].PacmanMoves.moves->position;
+							ghosts[i].lastPacmanDirection = ghosts[i].PacmanMoves.moves->dir;
+
+							removeFirstMove(i);
+
+						}
+					}
 				}
 			}
 		}
-
 	}
 }
 
@@ -670,9 +741,12 @@ void sendPacmanHome() {
 
 	home.x -= cellWidth/2.0;
 
-	PAC_Position = home;
-	PAC_Direction = NONE;
-	PacmanMoving = false;
+	Pacman.position = home;
+	Pacman.currentDirection = NONE;
+	Pacman.currentPosition = grid;
+	Pacman.moving = false;
+	Pacman.nextDirection = NONE;
+	Pacman.previousDirection = NONE;
 
 }
 
@@ -685,8 +759,18 @@ void sendGhostHome(int ghostNum) {
 	gridPosition grid = {12 + ghostNum, 14};
 	point home = gridToPos(grid);
 
-	Ghost_Position[ghostNum] = home;
-	ghostHome[ghostNum] = true;
+	ghosts[ghostNum].position = home;
+	ghosts[ghostNum].atHome = true;
+	ghosts[ghostNum].followMode = false;
+	ghosts[ghostNum].moving = false;
+	ghosts[ghostNum].currentDirection = NONE;
+	ghosts[ghostNum].currentPosition = grid;
+	ghosts[ghostNum].moving = false;
+	ghosts[ghostNum].nextDirection = NONE;
+	ghosts[ghostNum].nextPosition = grid;
+	ghosts[ghostNum].previousDirection = NONE;
+
+	clearMoves(ghostNum);
 
 	if(ghostInit)
 		glutTimerFunc(ghostNum*1000, sendGhostBoard, ghostNum);
@@ -706,10 +790,11 @@ void sendGhostBoard(int ghostNum) {
 	gridPosition grid ={12 + ghostNum,11};
 	point home = gridToPos(grid);
 
-	Ghost_Position[ghostNum] = home;
-	Ghost_Direction[ghostNum] = NONE;
-	ghostMoving[ghostNum] = false;
-	ghostHome[ghostNum] = false;
+	ghosts[ghostNum].position = home;
+	ghosts[ghostNum].currentDirection = NONE;
+	ghosts[ghostNum].previousDirection = FORWARD;
+	ghosts[ghostNum].moving = false;
+	ghosts[ghostNum].atHome = false;
 }
 
 /**
@@ -766,10 +851,8 @@ void checkGhosts() {
 	int  ghostNum;
 
 	for(int i=0; i<GHOST_COUNT; i++) {
-		gridPosition ghostPos;
-		ghostPos = locateOnGrid(Ghost_Position[i]);
 
-		if(fabs(PAC_Position.x - Ghost_Position[i].x) < (PAC_RADIUS + GHOST_SCALE)/2.0 && fabs(PAC_Position.z - Ghost_Position[i].z) < (PAC_RADIUS + GHOST_SCALE)/2.0) {
+		if(fabs(Pacman.position.x - ghosts[i].position.x) < (PAC_RADIUS + GHOST_SCALE)/2.0 && fabs(Pacman.position.z - ghosts[i].position.z) < (PAC_RADIUS + GHOST_SCALE)/2.0) {
 			ghostTouched = true;
 			ghostNum = i;
 		}
@@ -890,8 +973,10 @@ void removeFruit() {
  * @retval None
  */
 void initMoves() {
-	PacmanMoves.numMoves = 0;
-	PacmanMoves.moves = NULL;
+	for(int i=0; i<GHOST_COUNT; i++) {
+		ghosts[i].PacmanMoves.numMoves = 0;
+		ghosts[i].PacmanMoves.moves = NULL;
+	}
 }
 
 /**
@@ -900,7 +985,7 @@ void initMoves() {
  * #param	newDirection : the direction Pacman took
  * @retval None
  */
-void addMove(gridPosition pos, direction newDirection) {
+void addMove(int ghost, gridPosition pos, direction newDirection) {
 	move* newMove;
 
 	newMove = (move*) malloc(sizeof(move));
@@ -914,18 +999,30 @@ void addMove(gridPosition pos, direction newDirection) {
 	newMove->position	 = pos;
 	newMove->next 		= NULL;
 
-	if(PacmanMoves.numMoves == 0) {
-		PacmanMoves.moves = newMove;
+	if(ghosts[ghost].PacmanMoves.numMoves == 0) {
+		ghosts[ghost].PacmanMoves.moves = newMove;
 	}
 	else {
-		move* new = PacmanMoves.moves;
-		for(int i=0; i<PacmanMoves.numMoves - 1; i++)
+		move* new = ghosts[ghost].PacmanMoves.moves;
+		for(int i=0; i<ghosts[ghost].PacmanMoves.numMoves - 1; i++)
 			new = new->next;
 
 		new->next = newMove;
 	}
 
-	PacmanMoves.numMoves++;
+	ghosts[ghost].PacmanMoves.numMoves++;
+}
+
+void removeFirstMove(int ghost) {
+	if(ghosts[ghost].PacmanMoves.numMoves > 0) {
+		move* first = ghosts[ghost].PacmanMoves.moves;
+		move* second = first->next;
+
+		free(first);
+
+		ghosts[ghost].PacmanMoves.moves = second;
+		(ghosts[ghost].PacmanMoves.numMoves)--;
+	}
 }
 
 /**
@@ -933,8 +1030,8 @@ void addMove(gridPosition pos, direction newDirection) {
  * @param  None
  * @retval None
  */
-void clearMoves() {
-	move* pt = PacmanMoves.moves;
+void clearMoves(int ghost) {
+	move* pt = ghosts[ghost].PacmanMoves.moves;
 	move* toDelete;
 
 	while(pt != NULL) {
@@ -943,16 +1040,15 @@ void clearMoves() {
 		free(toDelete);
 	}
 
-	PacmanMoves.moves = NULL;
-	PacmanMoves.numMoves = 0;
+	ghosts[ghost].PacmanMoves.moves = NULL;
+	ghosts[ghost].PacmanMoves.numMoves = 0;
 }
 
 bool PacmanInSight(int ghostNum) {
-	gridPosition currentPos,PacmanPos = locateOnGrid(PAC_Position);
-	gridPosition grid = locateOnGrid(Ghost_Position[ghostNum]);
+	gridPosition currentPos,PacmanPos = locateOnGrid(Pacman.position);
 	int xinc, zinc;
 
-	switch(Ghost_Direction[ghostNum]) {
+	switch(ghosts[ghostNum].currentDirection) {
 		case FORWARD:
 			zinc = -1;
 			xinc = 0;
@@ -969,12 +1065,12 @@ bool PacmanInSight(int ghostNum) {
 			zinc = 0;
 			xinc = 1;
 			break;
-		default:
+		case NONE:
 			break;
 		}
 
-		currentPos.x = grid.x;
-		currentPos.z = grid.z;
+		currentPos.x = ghosts[ghostNum].currentPosition.x;
+		currentPos.z = ghosts[ghostNum].currentPosition.z;
 
 		do {
 			currentPos.x += xinc;
@@ -985,8 +1081,40 @@ bool PacmanInSight(int ghostNum) {
 			if(currentPos.x < 0 || currentPos.x > N_CELLS_W) {	// no walls for the teleportation gates
 				break;
 			}
+			if(currentPos.z < 0 || currentPos.z > N_CELLS_H) {
+				break;
+			}
 
 		} while(GameBoard[currentPos.z][currentPos.x] != WALL);
 
 	return false;
+}
+
+gridPosition findNextCell(gridPosition currentPosition, direction dir) {
+	gridPosition nextPosition;
+
+	switch (dir) {
+	case NONE:
+		nextPosition.x = currentPosition.x;
+		nextPosition.z = currentPosition.z;
+		break;
+	case FORWARD:
+		nextPosition.x = currentPosition.x;
+		nextPosition.z = currentPosition.z - 1;
+		break;
+	case BACKWARD:
+		nextPosition.x = currentPosition.x;
+		nextPosition.z = currentPosition.z + 1;
+		break;
+	case LEFT:
+		nextPosition.x = currentPosition.x - 1;
+		nextPosition.z = currentPosition.z;
+		break;
+	case RIGHT:
+		nextPosition.x = currentPosition.x + 1;
+		nextPosition.z = currentPosition.z;
+		break;
+	}
+
+	return nextPosition;
 }

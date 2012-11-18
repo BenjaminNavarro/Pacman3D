@@ -47,8 +47,10 @@ void			levelUp();
 void			addFruit();
 void			removeFruit();
 void			initMoves();
-void			addMove(gridPosition pos, direction newDirection);
-void			clearMoves();
+void			addMove(int ghost, gridPosition pos, direction newDirection);
+void			removeFirstMove(int ghost);
+void			clearMoves(int ghost);
 bool 			PacmanInSight(int ghostNum);
+gridPosition	findNextCell(gridPosition currentPosition, direction dir);
 
 #endif /* GAMEFUNCTIONS_H_ */
