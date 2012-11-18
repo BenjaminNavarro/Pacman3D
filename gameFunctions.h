@@ -49,6 +49,7 @@ void			removeFruit();
 void			initMoves();
 void			addMove(int ghost, gridPosition pos, direction newDirection);
 void			removeFirstMove(int ghost);
+bool 			isAPossibleNextMove(int i);
 void			clearMoves(int ghost);
 bool 			PacmanInSight(int ghostNum);
 gridPosition	findNextCell(gridPosition currentPosition, direction dir);

@@ -29,11 +29,11 @@ typedef struct {
 } gridPosition;
 
 typedef enum {
-	NONE		,
-	FORWARD		,
-	BACKWARD	,
-	LEFT		,
-	RIGHT
+	NONE		= 0,
+	FORWARD		= 1,
+	BACKWARD	= 2,
+	LEFT		= 3,
+	RIGHT		= 4
 } direction;
 
 typedef enum {
@@ -109,7 +109,7 @@ extern 		float 			PAC_PosInc;			// At each timer update, pacman moves to PAC_Pos
 
 /***				Ghosts related values				***/
 #define		GHOST_SCALE		0.10
-#define 	GHOST_COUNT		4
+#define 	GHOST_COUNT		1
 
 extern		float			Ghost_PosInc;
 

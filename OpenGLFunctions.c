@@ -5,7 +5,7 @@ GLMmodel*  		PacmanModel;						// glm model data structure for pacman
 GLMmodel*		PacmanAnimation[PAC_ANIM_FRAMES];	// array of the different pacman models
 GLMmodel*		Ghost[GHOST_COUNT];					// array of the different ghosts models
 GLuint			floorTex;							// handle for the floor texture
-float 			camAngle = 90.0f;
+float 			camAngle = 45.0f;
 direction 		newDirection = NONE;
 
 extern ghost	ghosts[GHOST_COUNT];
@@ -28,7 +28,7 @@ void drawScene() {
 		glRotatef(camAngle,1,0,0);
 	}
 	else {
-		glTranslatef(0, 0, -6);
+		glTranslatef(0, -0.5, -7);
 		glRotatef(camAngle,1,0,0);
 	}
 
@@ -209,6 +209,12 @@ void handleKeypress(unsigned char key, int x, int y) {
 		break;
 	case 'm':	// Move low
 		camAngle -= 1;
+		break;
+	case '2':	// Move low
+		camAngle = 90.0f;
+		break;
+	case '3':	// Move low
+		camAngle = 45.0f;
 		break;
 	}
 }
