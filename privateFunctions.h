@@ -22,6 +22,9 @@ float	degToRad(float angle);
 void assert_failed(unsigned char* file, unsigned int line);
 
 /***				Defines					***/
+#define	FAILED	0
+#define SUCCESS	1
+
 #define assert(expr) 				((expr) ? (void)0 : assert_failed((unsigned char *)__FILE__, __LINE__))
 
 #define isValidPosition(pos)		((pos.x >= -GameBaseSize.x) && \
@@ -31,6 +34,9 @@ void assert_failed(unsigned char* file, unsigned int line);
 
 #define isValidCell(cell)			((cell.x <= N_CELLS_W) && \
 									 (cell.z <= N_CELLS_H))
+
+#define isSameCell(cell1,cell2)		(((cell1.x) == (cell2.x)) && \
+									 ((cell1.z) == (cell2.z)))
 
 #define isOnWall(cell)				(GameBoard[cell.z][cell.x] != WALL)
 #define wallOnTop(cell)				(GameBoard[cell.z-1][cell.x] == WALL)

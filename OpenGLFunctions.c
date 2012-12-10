@@ -4,6 +4,7 @@
 GLMmodel*  		PacmanModel;						// glm model data structure for pacman
 GLMmodel*		PacmanAnimation[PAC_ANIM_FRAMES];	// array of the different pacman models
 GLMmodel*		Ghost[GHOST_COUNT];					// array of the different ghosts models
+GLMmodel*		BlueGhost;							// Model for the blue ghosts (when haunted)
 GLuint			floorTex;							// handle for the floor texture
 float 			camAngle = 45.0f;
 direction 		newDirection = NONE;
@@ -117,6 +118,7 @@ void drawScene() {
 		else
 			dir = ghosts[i].currentDirection;
 
+
 		switch (dir) {
 		case NONE:
 			// Nothing to do
@@ -135,7 +137,10 @@ void drawScene() {
 			break;
 		}
 
-		glmDraw(Ghost[i], GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+		if(ghosts[i].blue == false)
+			glmDraw(Ghost[i], GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+		else
+			glmDraw(BlueGhost, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
 
 		glPopMatrix();
 
@@ -167,8 +172,12 @@ void loadModels(void) {
 		glmFacetNormals(Ghost[i]);									// Generates the facet normals
 		glmVertexNormals(Ghost[i], 90.0f);							// Smooth the model up to 90¡
 
-		sendGhostHome(i);											// Move the ghost the its origin position
 	}
+
+	BlueGhost = glmReadOBJ("models/ghost_blue.obj");
+	glmUnitize(BlueGhost);
+	glmFacetNormals(BlueGhost);
+	glmVertexNormals(BlueGhost,90.0f);
 
 	// Set PacmanModel pointing to the first frame
 	PacmanModel = PacmanAnimation[0];
@@ -177,17 +186,17 @@ void loadModels(void) {
 
 	glEnable(GL_CULL_FACE);
 
-	sendPacmanHome();
+	resetPositions();
 
 }
 
 //Called when a key is pressed
 void handleKeypress(unsigned char key, int x, int y) {
 
-	switch (key) {
+	switch (tolower(key)) {
 	case 27: //Escape key
 		glDeleteTextures(1,&floorTex);
-		exit(0);
+		exit(EXIT_SUCCESS);
 		break;
 	case 'a':	// Stop (for testing purposes)
 		Pacman.nextDirection = NONE;
@@ -335,7 +344,7 @@ void Ghost_Update(int value) {
 	glutTimerFunc(ghostSpeed, Ghost_Update, 0);
 }
 
-// Refresh the display at 50Hz
+// Refresh the display
 void refresh() {
 	glutPostRedisplay();
 

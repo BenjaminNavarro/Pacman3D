@@ -8,9 +8,9 @@
 #include "values.h"
 
 /***				Pacman related values				***/
-direction 	PAC_Direction 	= NONE;
-point		PAC_Position 	= {0,	 0,	 0};
-float		PAC_PosInc 		= 0.01;
+direction 		PAC_Direction 	= NONE;
+point			PAC_Position 	= {0,	 0,	 0};
+float			PAC_PosInc 		= 0.01;
 
 /***				Ghost related values				***/
 direction		Ghost_Direction[GHOST_COUNT];
@@ -21,9 +21,9 @@ float			Ghost_PosInc = 0.01;
 point			GameBaseSize 		= {2.0f ,	 0,	  2.217f};
 int				speed 				= 10;
 int				animationSpeed		= 25;
-int				ghostSpeed			= 15;
+int				ghostSpeed			= 10;
 int				score				= 0;
-int				level				= 5;
+int				level				= 10;
 bool			hunted				= true;
 int				lives				= MAX_LIVES;
 int				comboValue			= 200;

@@ -85,6 +85,7 @@ typedef struct {
 	bool			moving;
 	bool			atHome;
 	bool			followMode;
+	bool			blue;
 	lastMoves		PacmanMoves;
 } ghost;
 
@@ -109,7 +110,7 @@ extern 		float 			PAC_PosInc;			// At each timer update, pacman moves to PAC_Pos
 
 /***				Ghosts related values				***/
 #define		GHOST_SCALE		0.10
-#define 	GHOST_COUNT		1
+#define 	GHOST_COUNT		4
 
 extern		float			Ghost_PosInc;
 

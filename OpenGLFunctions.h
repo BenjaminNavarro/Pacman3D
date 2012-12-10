@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 
 // OpenGL / GLUT libraries
 #include "OpenGLHeader.h"

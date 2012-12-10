@@ -52,6 +52,8 @@ void			removeFirstMove(int ghost);
 bool 			isAPossibleNextMove(int i);
 void			clearMoves(int ghost);
 bool 			PacmanInSight(int ghostNum);
+void			findNextRandomMove(int ghost);
 gridPosition	findNextCell(gridPosition currentPosition, direction dir);
+direction 		findDirection(gridPosition current, gridPosition next);
 
 #endif /* GAMEFUNCTIONS_H_ */
