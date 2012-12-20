@@ -19,11 +19,11 @@ float			Ghost_PosInc = 0.01;
 
 /***				General values						***/
 point			GameBaseSize 		= {2.0f ,	 0,	  2.217f};
-int				speed 				= 10;
+int				speed 				= 12;
 int				animationSpeed		= 25;
-int				ghostSpeed			= 10;
+int				ghostSpeed			= 12;
 int				score				= 0;
-int				level				= 10;
+int				level				= 3;
 bool			hunted				= true;
 int				lives				= MAX_LIVES;
 int				comboValue			= 200;

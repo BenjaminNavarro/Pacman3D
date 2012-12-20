@@ -148,6 +148,7 @@ void movePacman(direction dir) {
 
 			for(int i=0; i< GHOST_COUNT; i++) {
 
+				// if the list is empty, we don't have to wait anymore
 				if(ghosts[i].PacmanMoves.numMoves == 0)
 					wait[i] = false;
 
@@ -158,12 +159,12 @@ void movePacman(direction dir) {
 						if(ghosts[i].PacmanMoves.numMoves == (level-1))
 							wait[i] = true;
 
-						printf("add move to %d : dir=%d at %d,%d\n",i,Pacman.currentDirection,Pacman.currentPosition.x,Pacman.currentPosition.z);
+						printf("add move n%d to %d : dir=%d at %d,%d\n",ghosts[i].PacmanMoves.numMoves,i,Pacman.currentDirection,Pacman.currentPosition.x,Pacman.currentPosition.z);
 					}
 				}
 
-				if(Pacman.currentDirection == NONE)
-					wait[i]=true;
+//				if(Pacman.currentDirection == NONE)
+//					wait[i]=true;
 			}
 			Pacman.previousDirection = Pacman.currentDirection;
 		}
@@ -285,11 +286,14 @@ void moveGhosts() {
 
 					printf("%d is following you! Go to %d,%d\n",i,ghosts[i].cellToReach.x,ghosts[i].cellToReach.z);
 
-					clearMoves(i);
+					//clearMoves(i);
+
+					while(ghosts[i].PacmanMoves.numMoves > 1)
+						removeFirstMove(i);
 
 				}
 				else if(ghosts[i].followMode == true) {
-					// Reaching the last Pacman's position known
+					// Reaching the last Pacman's known position
 					if(!onCellCenter(ghosts[i].position, ghosts[i].cellToReach)) {
 
 						ghosts[i].nextPosition = findNextCell(ghosts[i].currentPosition, ghosts[i].currentDirection);
@@ -303,11 +307,11 @@ void moveGhosts() {
 						if(ghosts[i].PacmanMoves.numMoves == 0) {
 							ghosts[i].currentDirection = ghosts[i].lastPacmanDirection;
 
-							findNextRandomMove(i);
+							ghosts[i].nextPosition = findNextCell(ghosts[i].currentPosition, ghosts[i].currentDirection);
 
 							ghosts[i].followMode = false;
 
-							printf("%d is no longer following you\n",i);
+							printf("%d is no longer following you at %d,%d\n",i,ghosts[i].currentPosition.x,ghosts[i].currentPosition.z);
 						}
 						// there is at least one move recorded
 						else {
@@ -331,11 +335,13 @@ void moveGhosts() {
 								printf("%d %d,%d -> %d,%d dir=%d\n",i,ghosts[i].currentPosition.x,ghosts[i].currentPosition.z,ghosts[i].cellToReach.x,ghosts[i].cellToReach.z,ghosts[i].currentDirection);
 							}
 							else {
-								findNextRandomMove(i);
+								ghosts[i].currentDirection = ghosts[i].lastPacmanDirection;
+
+								ghosts[i].nextPosition = findNextCell(ghosts[i].currentPosition, ghosts[i].currentDirection);
 
 								ghosts[i].followMode = false;
 
-								printf("%d is no longer following you\n",i);
+								printf("/!\\ %d is no longer following you at %d,%d\n",i,ghosts[i].currentPosition.x,ghosts[i].currentPosition.z);
 							}
 						}
 					}
@@ -758,6 +764,7 @@ void checkGhosts() {
 				if(lives == 0)
 					gameOver();
 
+				sendPacmanHome();
 				return;
 			}
 			else {
@@ -950,24 +957,32 @@ bool isAPossibleNextMove(int i) {
 
 	switch(last->dir) {
 	case FORWARD:
-		if(last->position.z >= Pacman.currentPosition.z)
+		if(last->position.z >= Pacman.currentPosition.z) {
 			xinc = 0;
 			zinc = -1;
+			ok = true;
+		}
 		break;
 	case BACKWARD:
-		if(last->position.z <= Pacman.currentPosition.z)
+		if(last->position.z <= Pacman.currentPosition.z) {
 			xinc = 0;
 			zinc = 1;
+			ok = true;
+		}
 		break;
 	case LEFT:
-		if(last->position.x >= Pacman.currentPosition.x)
+		if(last->position.x >= Pacman.currentPosition.x) {
 			xinc = -1;
 			zinc = 0;
+			ok = true;
+		}
 		break;
 	case RIGHT:
-		if(last->position.x <= Pacman.currentPosition.x)
+		if(last->position.x <= Pacman.currentPosition.x) {
 			xinc = 1;
 			zinc = 0;
+			ok = true;
+		}
 		break;
 	default:
 		printf("crap\n");
@@ -1023,6 +1038,7 @@ void clearMoves(int ghost) {
 bool PacmanInSight(int ghostNum) {
 	gridPosition currentPos,PacmanPos = locateOnGrid(Pacman.position);
 	int xinc, zinc;
+	bool test = false;
 
 	if(level == 1)
 		return false;
@@ -1031,22 +1047,29 @@ bool PacmanInSight(int ghostNum) {
 		case FORWARD:
 			zinc = -1;
 			xinc = 0;
+			test = true;
 			break;
 		case BACKWARD:
 			zinc = 1;
 			xinc = 0;
+			test = true;
 			break;
 		case LEFT:
 			zinc = 0;
 			xinc = -1;
+			test = true;
 			break;
 		case RIGHT:
 			zinc = 0;
 			xinc = 1;
+			test = true;
 			break;
 		case NONE:
 			break;
 		}
+
+		if(test == false)
+			return false;
 
 		currentPos.x = ghosts[ghostNum].currentPosition.x;
 		currentPos.z = ghosts[ghostNum].currentPosition.z;

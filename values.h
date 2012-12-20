@@ -133,8 +133,8 @@ extern 		gridPosition	fruitPosition;		// Stores where the fruits appear
 #define		MAX_LIVES		3
 #define		COMBO_TIME		8
 
-#define 	SCREEN_WIDTH	800
-#define		SCREEN_HEIGHT	600
+#define 	SCREEN_WIDTH	1024
+#define		SCREEN_HEIGHT	768
 
 #define		COIN_POINTS		10
 #define		BIGCOIN_POINTS	50
