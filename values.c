@@ -10,7 +10,7 @@
 /***				Pacman related values				***/
 direction 		PAC_Direction 	= NONE;
 point			PAC_Position 	= {0,	 0,	 0};
-float			PAC_PosInc 		= 0.01;
+float			PAC_PosInc 		= 0.011;
 
 /***				Ghost related values				***/
 direction		Ghost_Direction[GHOST_COUNT];
@@ -23,7 +23,7 @@ int				speed 				= 12;
 int				animationSpeed		= 25;
 int				ghostSpeed			= 12;
 int				score				= 0;
-int				level				= 3;
+int				level				= 5;
 bool			hunted				= true;
 int				lives				= MAX_LIVES;
 int				comboValue			= 200;

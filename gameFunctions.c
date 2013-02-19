@@ -11,9 +11,11 @@ gridPosition	nextPosition = {14,17};				// Next Pacman position
 bool 			PacmanMoving = false;				// Tells if Pacman is moving or not
 GLMmodel*		fruitsModels[FRUIT_COUNT];
 GLMmodel* 		fruitModel;
+extern 			GLMmodel* 		cherry;
 
-ghost			ghosts[GHOST_COUNT];
-pac				Pacman;
+
+ghost			ghosts[GHOST_COUNT];				// Holds the ghost's structures
+pac				Pacman;								// Holds the Pacman structure
 
 /**
  * @brief  Finds the grid's cell corresponding to the given position
@@ -148,11 +150,16 @@ void movePacman(direction dir) {
 
 			for(int i=0; i< GHOST_COUNT; i++) {
 
-				// if the list is empty, we don't have to wait anymore
+				// If Pacman changes its direction to face the ghost, we don't count it as a move
+				if(isOppositeDirection(Pacman.previousDirection,Pacman.currentDirection)) {
+					continue;
+				}
+
+				// if the list is empty, we don't have to wait anymore to record an other move
 				if(ghosts[i].PacmanMoves.numMoves == 0)
 					wait[i] = false;
 
-				if((ghosts[i].followMode == true) && (wait[i] == false) && (Pacman.currentDirection != NONE)) {
+				if((ghosts[i].followMode == true) && (wait[i] == false) && (Pacman.currentDirection != NONE) && !isOppositeDirection(Pacman.previousDirection,Pacman.currentDirection)) {
 					if(isAPossibleNextMove(i)) {
 						addMove(i,Pacman.currentPosition,Pacman.currentDirection);
 
@@ -162,9 +169,6 @@ void movePacman(direction dir) {
 						printf("add move n%d to %d : dir=%d at %d,%d\n",ghosts[i].PacmanMoves.numMoves,i,Pacman.currentDirection,Pacman.currentPosition.x,Pacman.currentPosition.z);
 					}
 				}
-
-//				if(Pacman.currentDirection == NONE)
-//					wait[i]=true;
 			}
 			Pacman.previousDirection = Pacman.currentDirection;
 		}
@@ -207,15 +211,15 @@ void moveGhosts() {
 
 	for(int i=0; i<GHOST_COUNT; i++) {
 
+		// If the ghost is at home we don't have anything to do
 		if(ghosts[i].atHome)
 			continue;
 
+		// Stops if the ghost is out of the game board
 		assert(isValidPosition(ghosts[i].position));
 
 		// Locate the ghost on the grid
 		ghosts[i].currentPosition = locateOnGrid(ghosts[i].position);
-
-		assert(isValidCell(ghosts[i].currentPosition));
 
 		// Test if the ghost is moving
 		if(!ghosts[i].moving) {
@@ -262,20 +266,24 @@ void moveGhosts() {
 			if(!ghosts[i].blue && (comboTimeRemaining > 0))
 				Ghost_PosInc /= 2.0;
 
+			// Display some debug infos if the ghost is out of the game board
 			if(!isValidPosition(ghosts[i].position)) {
 				printf("%d is out at %d,%d\nYou are at %d,%d\n",i,ghosts[i].currentPosition.x,ghosts[i].currentPosition.z,Pacman.currentPosition.x,Pacman.currentPosition.z);
 				assert(FAILED);
 			}
 
-			// If the next position is reach Pacman is stopped and we check
-			// if there is some action to do (take a coin for example)
+			// If the next position is reach the ghost is stopped and we
+			// find the next cell to reach depending on the ghost's follow mode
 			if(onCellCenter(ghosts[i].position, ghosts[i].nextPosition)) {
+				// Make sure to put the ghost in the center of its cell
 				ghosts[i].position = gridToPos(ghosts[i].currentPosition);
 
 				ghosts[i].moving = false;
 
+				// Do we see Pacman and we're not eatable?
 				if(PacmanInSight(i) && !ghosts[i].blue) {
 
+					// Set the follow mode to true and go to Pacman's position
 					ghosts[i].followMode = true;
 					ghosts[i].cellToReach = Pacman.currentPosition;
 					ghosts[i].lastPacmanDirection = Pacman.currentDirection;
@@ -286,12 +294,12 @@ void moveGhosts() {
 
 					printf("%d is following you! Go to %d,%d\n",i,ghosts[i].cellToReach.x,ghosts[i].cellToReach.z);
 
-					//clearMoves(i);
-
+					// If the ghost is still seeing Pacman, just leave the last recorded move
 					while(ghosts[i].PacmanMoves.numMoves > 1)
 						removeFirstMove(i);
 
 				}
+				// Are we following Pacman?
 				else if(ghosts[i].followMode == true) {
 					// Reaching the last Pacman's known position
 					if(!onCellCenter(ghosts[i].position, ghosts[i].cellToReach)) {
@@ -313,7 +321,7 @@ void moveGhosts() {
 
 							printf("%d is no longer following you at %d,%d\n",i,ghosts[i].currentPosition.x,ghosts[i].currentPosition.z);
 						}
-						// there is at least one move recorded
+						// there is at least one move recorded so we take it
 						else {
 
 							do {
@@ -330,10 +338,12 @@ void moveGhosts() {
 
 							} while (ghosts[i].currentDirection == NONE);
 
+							// If the direction is not equal to NONE, we have some place to go
 							if(ghosts[i].currentDirection != NONE) {
 								ghosts[i].nextPosition = findNextCell(ghosts[i].currentPosition, ghosts[i].currentDirection);
 								printf("%d %d,%d -> %d,%d dir=%d\n",i,ghosts[i].currentPosition.x,ghosts[i].currentPosition.z,ghosts[i].cellToReach.x,ghosts[i].cellToReach.z,ghosts[i].currentDirection);
 							}
+							// Else we have to return in random mode
 							else {
 								ghosts[i].currentDirection = ghosts[i].lastPacmanDirection;
 
@@ -364,14 +374,17 @@ void renderGame() {
 	point 			position;
 	gridPosition 	grid;
 
+	// Enable the use of colored polygons
 	glEnable(GL_COLOR_MATERIAL);
 
+	// scan all the cells
 	for(int zcell=0; zcell<N_CELLS_H; zcell++) {
 		for(int xcell=0; xcell<N_CELLS_W; xcell++) {
 			grid.x = xcell;
 			grid.z = zcell;
 			position = gridToPos(grid);
 
+			// What type of cell?
 			switch(GameBoard[zcell][xcell]) {
 			case EMPTY:
 				break;
@@ -394,10 +407,15 @@ void renderGame() {
 
 			case FRUIT:
 				glPushMatrix();
-				glTranslatef(position.x, OBJECTS_HEIGHT, position.z);
-				//glmDraw(fruitModel, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
-				glutSolidSphere(0.05,8,8);
+
+				glTranslatef(position.x,0.1,position.z);
+				glScalef(0.1,0.1,0.1);
+
+				glmDraw(cherry, GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
+
 				glPopMatrix();
+
+				glEnable(GL_COLOR_MATERIAL);
 				break;
 			default:
 				break;
@@ -415,6 +433,7 @@ void renderGame() {
  */
 void checkCellAction(gridPosition grid) {
 
+	// What type of cell?
 	switch(GameBoard[grid.z][grid.x]) {
 	case EMPTY:
 		break;
@@ -426,19 +445,23 @@ void checkCellAction(gridPosition grid) {
 
 		GameBoard[grid.z][grid.x] = EMPTY;
 
+		// Is the number of picked coins corresponds to a fruit appearing?
 		if(isFruitCoin(coinsPicked))
 			addFruit();
+
 		break;
 
 	case BIGCOIN:
 		GameBoard[grid.z][grid.x] = EMPTY;
 		score += BIGCOIN_POINTS;
 
+		// Set the ghosts to blue and stop them following Pacman (it would be too easy)
 		for(int i=0;i<GHOST_COUNT;i++) {
 			ghosts[i].blue = true;
 			ghosts[i].followMode = false;
 		}
 
+		// Start the combo period for COMBO_TIME seconds
 		startCombo(COMBO_TIME);
 		break;
 
@@ -486,13 +509,9 @@ void checkCellAction(gridPosition grid) {
 			break;
 	}
 
+	// Do we have eat all the pacdots?
 	if(coinsLeft == 0)
 		levelUp();
-
-
-
-
-
 }
 
 /**
@@ -510,14 +529,14 @@ void displayHUD() {
 	sprintf(textLives,"%d",lives);		// Put the lives number into a string
 	sprintf(textLevel,"%d",level);		// Put the level number into a string
 
-
+	// Reset the projection matrix and set the parameters to default
+	// It will result in a 2D drawing over the 3D scene
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
 	glOrtho(0.0, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0, -1.0, -1.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glDisable(GL_CULL_FACE);
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -589,15 +608,6 @@ void displayHUD() {
 }
 
 /**
- * @brief  Gives the next Pacman position
- * @param  None
- * @retval Next Pacman position
- */
-gridPosition getNextPosition() {
-	return nextPosition;
-}
-
-/**
  * @brief  Moves Pacman and the ghosts to their original positions
  * @param  None
  * @retval None
@@ -624,7 +634,6 @@ void gameOver() {
 	startCombo(0);
 	coinsPicked = 0;
 
-
 	gameBoardInit();
 
 	resetPositions();
@@ -639,16 +648,27 @@ void sendPacmanHome() {
 	float cellWidth = 2.0f * GameBaseSize.x / (float) N_CELLS_W;
 	gridPosition grid ={14,23};
 
+	// Get the starting point coordinates
 	point home = gridToPos(grid);
 
+	// Center Pacman on the cell
 	home.x -= cellWidth/2.0;
 
+	// Set defaults values
 	Pacman.position = home;
 	Pacman.currentDirection = NONE;
 	Pacman.currentPosition = grid;
 	Pacman.moving = false;
 	Pacman.nextDirection = NONE;
 	Pacman.previousDirection = NONE;
+
+	// Make sure that the followers return in random mode
+	for(int i=0; i<GHOST_COUNT; i++) {
+		if(ghosts[i].PacmanMoves.numMoves > 0) {
+			clearMoves(i);
+			ghosts[i].followMode = false;
+		}
+	}
 
 }
 
@@ -674,6 +694,7 @@ void sendGhostHome(int ghostNum) {
 
 	clearMoves(ghostNum);
 
+	// If it's an initialization, we defer the exit
 	if(ghostInit)
 		glutTimerFunc(ghostNum*1000, sendGhostBoard, ghostNum);
 	else
@@ -758,7 +779,9 @@ void startCombo(int value) {
  */
 void checkGhosts() {
 	for(int i=0; i<GHOST_COUNT; i++) {
+		// Are we touching a ghost?
 		if(fabs(Pacman.position.x - ghosts[i].position.x) < (PAC_RADIUS + GHOST_SCALE)/2.0 && fabs(Pacman.position.z - ghosts[i].position.z) < (PAC_RADIUS + GHOST_SCALE)/2.0) {
+			// If the ghost is not blue, Pacman is eatten
 			if(ghosts[i].blue == false) {
 				lives--;
 				if(lives == 0)
@@ -767,6 +790,7 @@ void checkGhosts() {
 				sendPacmanHome();
 				return;
 			}
+			// Else we eat it
 			else {
 				sendGhostHome(i);
 				score += comboValue;
@@ -786,6 +810,7 @@ void gameBoardInit() {
 		for(int xcell=0; xcell<N_CELLS_W; xcell++) {
 			GameBoard[zcell][xcell] = GameBoardInit[zcell][xcell];
 
+			// Count the number of coins on the game board
 			if(GameBoard[zcell][xcell] == COIN)
 				coinsLeft++;
 		}
@@ -802,11 +827,6 @@ void levelUp() {
 	resetPositions();
 	level++;
 	coinsPicked = 0;
-
-//	if(ghostSpeed > 1) {
-//		ghostSpeed--;
-//		speed--;
-//	}
 }
 
 /**
@@ -884,14 +904,16 @@ void initMoves() {
 }
 
 /**
- * @brief  Add a move to the Pacman's moves list
+ * @brief  Add a move to the Pacman's moves list of a ghost
+ * @param  ghost : the specified ghost
  * @param  pos : Position where the move occured
- * #param	newDirection : the direction Pacman took
+ * @param  newDirection : the direction Pacman took
  * @retval None
  */
 void addMove(int ghost, gridPosition pos, direction newDirection) {
 	move* newMove;
 
+	// Allocate the memory
 	newMove = (move*) malloc(sizeof(move));
 
 	if(newMove == NULL) {
@@ -903,9 +925,11 @@ void addMove(int ghost, gridPosition pos, direction newDirection) {
 	newMove->position	= pos;
 	newMove->next 		= NULL;
 
+	// First move in the list?
 	if(ghosts[ghost].PacmanMoves.moves == NULL) {
 		ghosts[ghost].PacmanMoves.moves = newMove;
 	}
+	// No? We have to find the last element in the list
 	else {
 		move* new = ghosts[ghost].PacmanMoves.moves;
 		while(new->next != NULL)
@@ -934,6 +958,11 @@ void removeFirstMove(int ghost) {
 	}
 }
 
+/**
+  * @brief  The if the next ghost move is a correct one
+  * @param  The ghost number
+  * @retval true/false
+  */
 bool isAPossibleNextMove(int i) {
 
 	move* last;
@@ -1035,6 +1064,11 @@ void clearMoves(int ghost) {
 	ghosts[ghost].PacmanMoves.numMoves = 0;
 }
 
+/**
+  * @brief  Test if Pacman is in the ghost's sight
+  * @param  The ghost number
+  * @retval true/false
+  */
 bool PacmanInSight(int ghostNum) {
 	gridPosition currentPos,PacmanPos = locateOnGrid(Pacman.position);
 	int xinc, zinc;
@@ -1092,6 +1126,12 @@ bool PacmanInSight(int ghostNum) {
 	return false;
 }
 
+/**
+  * @brief  Find the next cell according the current position and the direction to take
+  * @param  currentPosition : self explanatory
+  * @param  dir : the direction to take
+  * @retval the grid position
+  */
 gridPosition findNextCell(gridPosition currentPosition, direction dir) {
 	gridPosition nextPosition;
 
@@ -1121,6 +1161,11 @@ gridPosition findNextCell(gridPosition currentPosition, direction dir) {
 	return nextPosition;
 }
 
+/**
+  * @brief  Find the ghost's next cell randomly according to its current direction and the walls around
+  * @param  The ghost number
+  * @retval None
+  */
 void findNextRandomMove(int ghost) {
 		bool test = false;
 		direction temp;

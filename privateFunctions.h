@@ -25,24 +25,26 @@ void assert_failed(unsigned char* file, unsigned int line);
 #define	FAILED	0
 #define SUCCESS	1
 
-#define assert(expr) 				((expr) ? (void)0 : assert_failed((unsigned char *)__FILE__, __LINE__))
+#define assert(expr) 					((expr) ? (void)0 : assert_failed((unsigned char *)__FILE__, __LINE__))
 
-#define isValidPosition(pos)		((pos.x >= -GameBaseSize.x) && \
-									 (pos.x <=  GameBaseSize.x) && \
-									 (pos.z >= -GameBaseSize.z) && \
-									 (pos.z <=  GameBaseSize.z))
+#define isValidPosition(pos)			((pos.x >= -GameBaseSize.x) && \
+										 (pos.x <=  GameBaseSize.x) && \
+										 (pos.z >= -GameBaseSize.z) && \
+										 (pos.z <=  GameBaseSize.z))
 
-#define isValidCell(cell)			((cell.x <= N_CELLS_W) && \
-									 (cell.z <= N_CELLS_H))
+#define isValidCell(cell)				((cell.x <= N_CELLS_W) && \
+									 	 (cell.z <= N_CELLS_H))
 
-#define isSameCell(cell1,cell2)		(((cell1.x) == (cell2.x)) && \
-									 ((cell1.z) == (cell2.z)))
+#define isSameCell(cell1,cell2)			(((cell1.x) == (cell2.x)) && \
+									 	 ((cell1.z) == (cell2.z)))
 
-#define isOnWall(cell)				(GameBoard[cell.z][cell.x] != WALL)
-#define wallOnTop(cell)				(GameBoard[cell.z-1][cell.x] == WALL)
-#define wallOnBottom(cell)			(GameBoard[cell.z+1][cell.x] == WALL)
-#define wallOnLeft(cell)			(GameBoard[cell.z][cell.x-1] == WALL)
-#define wallOnRight(cell)			(GameBoard[cell.z][cell.x+1] == WALL)
+#define isOnWall(cell)					(GameBoard[cell.z][cell.x] != WALL)
+#define wallOnTop(cell)					(GameBoard[cell.z-1][cell.x] == WALL)
+#define wallOnBottom(cell)				(GameBoard[cell.z+1][cell.x] == WALL)
+#define wallOnLeft(cell)				(GameBoard[cell.z][cell.x-1] == WALL)
+#define wallOnRight(cell)				(GameBoard[cell.z][cell.x+1] == WALL)
+
+#define isOppositeDirection(dir1,dir2)	(((dir1+dir2) == 0 ? true : false))
 
 
 

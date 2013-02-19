@@ -5,9 +5,10 @@ GLMmodel*  		PacmanModel;						// glm model data structure for pacman
 GLMmodel*		PacmanAnimation[PAC_ANIM_FRAMES];	// array of the different pacman models
 GLMmodel*		Ghost[GHOST_COUNT];					// array of the different ghosts models
 GLMmodel*		BlueGhost;							// Model for the blue ghosts (when haunted)
+GLMmodel*		cherry;								// Model for the cherry
 GLuint			floorTex;							// handle for the floor texture
-float 			camAngle = 45.0f;
-direction 		newDirection = NONE;
+float 			camAngle = 45.0f;					// The angle of the camera
+direction 		newDirection = NONE;				// Pacman's new direction
 
 extern ghost	ghosts[GHOST_COUNT];
 extern pac		Pacman;
@@ -22,12 +23,14 @@ void drawScene() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
+	// 3D mode? Yes...
 	if(camAngle != 90.0) {
 		// translate the camera to follow pacman
 		// Projection of pacman's z coordinate on the y and z axes depending on the camera angle
-		glTranslatef(-Pacman.position.x, Pacman.position.z*sin(degToRad(camAngle)), -2.0f - Pacman.position.z*cos(degToRad(camAngle)));
+		glTranslatef(-Pacman.position.x, Pacman.position.z*sin(degToRad(camAngle)), -2.5f - Pacman.position.z*cos(degToRad(camAngle)));
 		glRotatef(camAngle,1,0,0);
 	}
+	// No... 2D-like mode
 	else {
 		glTranslatef(0, -0.5, -7);
 		glRotatef(camAngle,1,0,0);
@@ -43,7 +46,7 @@ void drawScene() {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		// Draw the bottom base square
+		// Draw the bottom base square and map the texture
 		glBegin(GL_QUADS);
 
 			glTexCoord2f(0,0); glVertex3f( -GameBaseSize.x, 	GameBaseSize.y, 	GameBaseSize.z);
@@ -81,7 +84,7 @@ void drawScene() {
 
 	glPushMatrix();
 
-		glTranslatef(Pacman.position.x, PAC_RADIUS + Pacman.position.y, Pacman.position.z);
+		glTranslatef(Pacman.position.x, PAC_RADIUS, Pacman.position.z);
 		glScalef(PAC_RADIUS,PAC_RADIUS,PAC_RADIUS);
 
 		switch (newDirection) {
@@ -110,9 +113,10 @@ void drawScene() {
 		direction dir;
 		glPushMatrix();
 
-		glTranslatef(ghosts[i].position.x, GHOST_SCALE + ghosts[i].position.y, ghosts[i].position.z);
+		glTranslatef(ghosts[i].position.x, GHOST_SCALE, ghosts[i].position.z);
 		glScalef(GHOST_SCALE,GHOST_SCALE,GHOST_SCALE);
 
+		// If the ghost is stopped, we take its previous direction
 		if(ghosts[i].currentDirection == NONE)
 			dir = ghosts[i].previousDirection;
 		else
@@ -137,6 +141,7 @@ void drawScene() {
 			break;
 		}
 
+		// If the ghosts are not blue, we load their respective models, else we load the blue ghost model
 		if(ghosts[i].blue == false)
 			glmDraw(Ghost[i], GLM_SMOOTH | GLM_TEXTURE | GLM_MATERIAL);
 		else
@@ -178,6 +183,11 @@ void loadModels(void) {
 	glmUnitize(BlueGhost);
 	glmFacetNormals(BlueGhost);
 	glmVertexNormals(BlueGhost,90.0f);
+
+	cherry = glmReadOBJ("models/cherry.obj");
+	glmUnitize(cherry);
+	glmFacetNormals(cherry);
+	glmVertexNormals(cherry,90.0f);
 
 	// Set PacmanModel pointing to the first frame
 	PacmanModel = PacmanAnimation[0];
@@ -273,6 +283,7 @@ void handleResize(int w, int h) {
 	gluPerspective(45.0, (double)SCREEN_WIDTH / (double)SCREEN_HEIGHT, 1.0, 200.0);
 }
 
+
 void PAC_Update(int value) {
 	static gridPosition	nextPosition;
 
@@ -287,19 +298,19 @@ void PAC_Update(int value) {
 			newDirection = NONE;
 			break;
 		case FORWARD:
-			if(GameBoard[nextPosition.z - 1][nextPosition.x] != WALL)
+			if(!wallOnTop(nextPosition))
 				newDirection = Pacman.nextDirection;
 			break;
 		case BACKWARD:
-			if(GameBoard[nextPosition.z + 1][nextPosition.x] != WALL)
+			if(!wallOnBottom(nextPosition))
 				newDirection = Pacman.nextDirection;
 			break;
 		case LEFT:
-			if(GameBoard[nextPosition.z][nextPosition.x - 1] != WALL)
+			if(!wallOnLeft(nextPosition))
 				newDirection = Pacman.nextDirection;
 			break;
 		case RIGHT:
-			if(GameBoard[nextPosition.z][nextPosition.x + 1] != WALL)
+			if(!wallOnRight(nextPosition))
 				newDirection = Pacman.nextDirection;
 			break;
 	}
